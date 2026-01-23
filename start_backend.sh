@@ -4,7 +4,7 @@
 # RGCNFormer Backend Startup Script
 # ============================================================================
 # This script starts both Gunicorn (Flask) and Celery worker services
-# with proper conda environment activation.
+# with proper conda environment activation and auto-configured concurrency.
 # ============================================================================
 
 # ============================================================================
@@ -22,30 +22,52 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
+# Set environment variables to mitigate PyTorch/Celery multiprocessing deadlocks
+export OMP_NUM_THREADS=1
+export MKL_NUM_THREADS=1
+
 echo "✓ Conda environment activated: $CONDA_ENV_NAME"
 
 # ============================================================================
-# Service Configuration
+# Service Configuration (Auto-detecting CPU cores)
 # ============================================================================
-WORKER_COUNT=4
 HOST=0.0.0.0
 PORT=8000
 
+# Automatically determine CPU core count
+if [ -f /proc/cpuinfo ]; then
+    CPU_CORES=$(grep -c ^processor /proc/cpuinfo)
+else
+    echo "⚠️ Could not read /proc/cpuinfo. Defaulting to 4 cores."
+    CPU_CORES=4
+fi
+echo "✓ Detected $CPU_CORES CPU cores."
+
+# Recommended worker counts
+# Gunicorn: (2 * cores) + 1 for handling I/O bound requests
+# Celery: number of cores for CPU-bound tasks
+# GUNICORN_WORKERS=$((2 * CPU_CORES + 1))
+# CELERY_CONCURRENCY=$CPU_CORES
+GUNICORN_WORKERS=1
+CELERY_CONCURRENCY=1
 # Change to backend directory
 cd "$(dirname "$0")"
 
 echo "=========================================="
 echo "  RGCNFormer Backend Startup"
 echo "=========================================="
-echo "Conda Environment: $CONDA_ENV_NAME"
-echo "Working Directory: $(pwd)"
+echo "Conda Environment:  $CONDA_ENV_NAME"
+echo "Working Directory:  $(pwd)"
+echo "Gunicorn Workers:   $GUNICORN_WORKERS"
+echo "Celery Concurrency: $CELERY_CONCURRENCY"
 echo "=========================================="
 
 # ============================================================================
 # Start Celery Worker (Background)
 # ============================================================================
-echo "🚀 Starting Celery worker..."
+echo "🚀 Starting Celery worker with $CELERY_CONCURRENCY concurrent processes..."
 celery -A tasks.celery_app worker \
+    --concurrency=$CELERY_CONCURRENCY \
     --loglevel=info \
     --pidfile=celery.pid \
     --logfile=celery.log &
@@ -64,8 +86,8 @@ fi
 # ============================================================================
 # Start Gunicorn Server (Foreground)
 # ============================================================================
-echo "🚀 Starting Gunicorn server (Workers: $WORKER_COUNT, $HOST:$PORT)..."
-gunicorn -w $WORKER_COUNT \
+echo "🚀 Starting Gunicorn server with $GUNICORN_WORKERS workers on $HOST:$PORT..."
+gunicorn -w $GUNICORN_WORKERS \
     -b $HOST:$PORT \
     --timeout 120 \
     --access-logfile gunicorn_access.log \

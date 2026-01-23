@@ -53,6 +53,11 @@ class Config:
         # Cache Configuration
         self.REDIS_CACHE_TTL = int(os.getenv('REDIS_CACHE_TTL', 3600))
 
+        # WeChat Mini Program Configuration
+        self.WX_APPID = os.getenv('WX_APPID', '')
+        self.WX_SECRET = os.getenv('WX_SECRET', '')
+        self.WX_LOGIN_URL = 'https://api.weixin.qq.com/sns/jscode2session'
+
         # Classification Thresholds (12-class)
         self.THRESHOLDS_12_CLASS: Dict[int, float] = {
             0: float(os.getenv('THRESHOLD_12_AM', 0.510)),     # Am
