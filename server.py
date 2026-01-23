@@ -147,6 +147,8 @@ def wx_login():
         return jsonify({"error": "No data provided"}), 400
     
     login_code = data.get('loginCode')
+    nickname = data.get('nickname')
+    avatar_url = data.get('avatarUrl')
     
     if not login_code:
         return jsonify({"error": "loginCode is required"}), 400
@@ -194,11 +196,12 @@ def wx_login():
             }), 500
         
         # Check if user already exists in Redis
+        # Use nickname and avatarUrl from frontend if provided
         user = {
             'openid': openid,
             'session_key': session_key,
-            'nickname': None,
-            'avatarUrl': None
+            'nickname': nickname,
+            'avatarUrl': avatar_url
         }
         
         if redis_client:
@@ -209,10 +212,17 @@ def wx_login():
                 if user_data:
                     existing_user = json.loads(user_data)
                     logger.info(f"Existing user found: {openid}")
-                    # Update session_key for security and preserve nickname/avatar
+                    # Update session_key for security
+                    # Use provided nickname/avatar from frontend, or keep existing if not provided
                     user['session_key'] = session_key
-                    user['nickname'] = existing_user.get('nickname')
-                    user['avatarUrl'] = existing_user.get('avatarUrl')
+                    if nickname is not None:
+                        user['nickname'] = nickname
+                    else:
+                        user['nickname'] = existing_user.get('nickname')
+                    if avatar_url is not None:
+                        user['avatarUrl'] = avatar_url
+                    else:
+                        user['avatarUrl'] = existing_user.get('avatarUrl')
                     redis_client.setex(
                         user_key,
                         30 * 24 * 3600,  # 30 days in seconds
@@ -228,7 +238,7 @@ def wx_login():
                     logger.info(f"New user created: {openid}")
             except Exception as e:
                 logger.error(f"Redis error during user storage: {e}")
-                # Continue with minimal user object even if Redis fails
+                # Continue with user object even if Redis fails
         
         # Prepare user info for response (exclude session_key for security)
         user_info = {
