@@ -1,0 +1,114 @@
+[2026-01-22 21:26:30,307: INFO/MainProcess] Connected to redis://localhost:6379/0
+[2026-01-22 21:26:30,311: INFO/MainProcess] mingle: searching for neighbors
+[2026-01-22 21:26:31,322: INFO/MainProcess] mingle: all alone
+[2026-01-22 21:26:31,347: INFO/MainProcess] celery@DESKTOP-1I4C9F0 ready.
+[2026-01-22 21:34:54,066: INFO/MainProcess] Task tasks.run_prediction_task[e3776d5e9b2a2086a3d0756bbe72f2060611d35703deaab737082fc6501d22e4] received
+[2026-01-22 21:34:54,070: INFO/ForkPoolWorker-13] Task e3776d5e9b2a2086a3d0756bbe72f2060611d35703deaab737082fc6501d22e4: Starting prediction for sequence length: 1001
+[2026-01-22 21:34:54,071: INFO/ForkPoolWorker-13] Task e3776d5e9b2a2086a3d0756bbe72f2060611d35703deaab737082fc6501d22e4: Generated job_id: e3776d5e9b2a2086a3d0756bbe72f2060611d35703deaab737082fc6501d22e4
+[2026-01-22 21:34:54,071: INFO/ForkPoolWorker-13] Task e3776d5e9b2a2086a3d0756bbe72f2060611d35703deaab737082fc6501d22e4: Running LinearFold...
+[2026-01-22 21:34:54,517: INFO/ForkPoolWorker-13] Task e3776d5e9b2a2086a3d0756bbe72f2060611d35703deaab737082fc6501d22e4: LinearFold completed
+[2026-01-22 21:34:54,559: INFO/ForkPoolWorker-13] Task e3776d5e9b2a2086a3d0756bbe72f2060611d35703deaab737082fc6501d22e4: Running model inference...
+[2026-01-22 21:34:55,137: INFO/ForkPoolWorker-13] Task e3776d5e9b2a2086a3d0756bbe72f2060611d35703deaab737082fc6501d22e4: Model inference completed
+[2026-01-22 21:34:55,138: INFO/ForkPoolWorker-13] Task e3776d5e9b2a2086a3d0756bbe72f2060611d35703deaab737082fc6501d22e4: Active groups after pruning: {'A'}
+[2026-01-22 21:34:55,138: INFO/ForkPoolWorker-13] Task e3776d5e9b2a2086a3d0756bbe72f2060611d35703deaab737082fc6501d22e4: Processing group 'A':
+[2026-01-22 21:34:55,138: INFO/ForkPoolWorker-13] Task e3776d5e9b2a2086a3d0756bbe72f2060611d35703deaab737082fc6501d22e4:   - Nucleotides in sequence: 322.0
+[2026-01-22 21:34:55,138: INFO/ForkPoolWorker-13] Task e3776d5e9b2a2086a3d0756bbe72f2060611d35703deaab737082fc6501d22e4:   - Combined attention shape: (1001,)
+[2026-01-22 21:34:55,138: INFO/ForkPoolWorker-13] Task e3776d5e9b2a2086a3d0756bbe72f2060611d35703deaab737082fc6501d22e4:   - Top K for group: 3
+[2026-01-22 21:34:55,146: INFO/ForkPoolWorker-13] Task e3776d5e9b2a2086a3d0756bbe72f2060611d35703deaab737082fc6501d22e4:   - Max attention in group: 0.002903175074607134
+[2026-01-22 21:34:55,176: INFO/ForkPoolWorker-13] Task e3776d5e9b2a2086a3d0756bbe72f2060611d35703deaab737082fc6501d22e4: GCN visualization stats: total edges=1154
+[2026-01-22 21:34:55,177: INFO/ForkPoolWorker-13] Task e3776d5e9b2a2086a3d0756bbe72f2060611d35703deaab737082fc6501d22e4: GCN visualization stats: nodes=1001, valid edges=1154
+[2026-01-22 21:34:55,195: INFO/ForkPoolWorker-13] Task e3776d5e9b2a2086a3d0756bbe72f2060611d35703deaab737082fc6501d22e4: Result cached in Redis for job_id: e3776d5e9b2a2086a3d0756bbe72f2060611d35703deaab737082fc6501d22e4
+[2026-01-22 21:34:55,196: INFO/ForkPoolWorker-13] Task e3776d5e9b2a2086a3d0756bbe72f2060611d35703deaab737082fc6501d22e4: Prediction completed successfully
+[2026-01-22 21:34:55,222: INFO/ForkPoolWorker-13] Task tasks.run_prediction_task[e3776d5e9b2a2086a3d0756bbe72f2060611d35703deaab737082fc6501d22e4] succeeded in 1.1549949239997659s: {'jobId': 'e3776d5e9b2a2086a3d0756bbe72f2060611d35703deaab737082fc6501d22e4', 'status': 'completed', 'classification': {'name': 'RNA Sequence', 'isPredicted': True, 'children': [{...}, {...}, {...}, {...}]}, 'attention': {'sequence': 'TCAGGAGTTCGAGACCAGCCTGATCAACATGACGAAACCCTATCTCTACTAAAAATACAAAAATTAGCCGGGCGTGGTGGCATGCGCCTGTAGTCTCAGCTACTTGGGAGGCTGAAGCAGGAGAATCGTTTGAACCCAGGAGGCAGAGGTTGCAGTGAGCCGAGATCGTGCCACTGCACTCCAGCCTGGGTGACACAGCGAGACTCTGTCTCAAAAAAATAAAAATAAAAAAATAAATAAATAACCTTTAATTTAGTGAGACTTCATATAGAATTGTTTTAATGTTTAATATAGACCATTTGTTTTAGGTGAATTTAACAATTTCATACTGTGATTAAGATTAATTTCTTTTTCTGACTTCTACCAGAAAGCAGGAATTATGTTTCAAATGGACAATCATTTACCAAACCTTGTTAATCTGAATGAAGATCCACAACTATCTGAGATGCTGCTATATATGATAAAAGAAGGAACAACTACAGTTGGAAAGTATAAACCAAACTCAAGCCATGATATTCAGTTATCTGGGGTGCTGATTGCTGATGATCATTGGTATGTTAATCCTCTAAAAAAAAAGAAAAGGCACCTGTTCTATATCTTGATAACATGTGGTTTCCTTCATATGGCATATTCGTTGATACTGATCGTTTGGTAGAATTCTTCAAACCCATTGTTTAGTCAGGAAAAACATACATTCTGAGTGTGTTATAAGGATGATAGGTCAGTTACTCTCAATATAAAGTACAGTGTAATGCTCTCTCTGTTTTTGTTTTGGCATACTTGATCTGTT...', ...}}
+[2026-01-22 21:36:01,884: INFO/MainProcess] Task tasks.run_prediction_task[c34aecdbc493dcb5f981c273046529268d481a31d83830cee195bf3dc0bf65bd] received
+[2026-01-22 21:36:01,886: INFO/ForkPoolWorker-13] Task c34aecdbc493dcb5f981c273046529268d481a31d83830cee195bf3dc0bf65bd: Starting prediction for sequence length: 995
+[2026-01-22 21:36:01,886: INFO/ForkPoolWorker-13] Task c34aecdbc493dcb5f981c273046529268d481a31d83830cee195bf3dc0bf65bd: Generated job_id: c34aecdbc493dcb5f981c273046529268d481a31d83830cee195bf3dc0bf65bd
+[2026-01-22 21:36:01,886: INFO/ForkPoolWorker-13] Task c34aecdbc493dcb5f981c273046529268d481a31d83830cee195bf3dc0bf65bd: Padded sequence to 1001 with 6 'N's (left: 3, right: 3)
+[2026-01-22 21:36:01,886: INFO/ForkPoolWorker-13] Task c34aecdbc493dcb5f981c273046529268d481a31d83830cee195bf3dc0bf65bd: Running LinearFold...
+[2026-01-22 21:36:02,281: INFO/ForkPoolWorker-13] Task c34aecdbc493dcb5f981c273046529268d481a31d83830cee195bf3dc0bf65bd: LinearFold completed
+[2026-01-22 21:36:02,282: INFO/ForkPoolWorker-13] Task c34aecdbc493dcb5f981c273046529268d481a31d83830cee195bf3dc0bf65bd: Running model inference...
+[2026-01-22 21:36:02,429: INFO/ForkPoolWorker-13] Task c34aecdbc493dcb5f981c273046529268d481a31d83830cee195bf3dc0bf65bd: Model inference completed
+[2026-01-22 21:36:02,430: INFO/ForkPoolWorker-13] Task c34aecdbc493dcb5f981c273046529268d481a31d83830cee195bf3dc0bf65bd: Active groups after pruning: {'U'}
+[2026-01-22 21:36:02,430: INFO/ForkPoolWorker-13] Task c34aecdbc493dcb5f981c273046529268d481a31d83830cee195bf3dc0bf65bd: Processing group 'U':
+[2026-01-22 21:36:02,430: INFO/ForkPoolWorker-13] Task c34aecdbc493dcb5f981c273046529268d481a31d83830cee195bf3dc0bf65bd:   - Nucleotides in sequence: 364.0
+[2026-01-22 21:36:02,431: INFO/ForkPoolWorker-13] Task c34aecdbc493dcb5f981c273046529268d481a31d83830cee195bf3dc0bf65bd:   - Combined attention shape: (1001,)
+[2026-01-22 21:36:02,431: INFO/ForkPoolWorker-13] Task c34aecdbc493dcb5f981c273046529268d481a31d83830cee195bf3dc0bf65bd:   - Top K for group: 3
+[2026-01-22 21:36:02,431: INFO/ForkPoolWorker-13] Task c34aecdbc493dcb5f981c273046529268d481a31d83830cee195bf3dc0bf65bd:   - Max attention in group: 0.18492086231809202
+[2026-01-22 21:36:02,433: INFO/ForkPoolWorker-13] Task c34aecdbc493dcb5f981c273046529268d481a31d83830cee195bf3dc0bf65bd: GCN visualization stats: total edges=1109
+[2026-01-22 21:36:02,434: INFO/ForkPoolWorker-13] Task c34aecdbc493dcb5f981c273046529268d481a31d83830cee195bf3dc0bf65bd: GCN visualization stats: nodes=995, valid edges=1109
+[2026-01-22 21:36:02,439: INFO/ForkPoolWorker-13] Task c34aecdbc493dcb5f981c273046529268d481a31d83830cee195bf3dc0bf65bd: Result cached in Redis for job_id: c34aecdbc493dcb5f981c273046529268d481a31d83830cee195bf3dc0bf65bd
+[2026-01-22 21:36:02,439: INFO/ForkPoolWorker-13] Task c34aecdbc493dcb5f981c273046529268d481a31d83830cee195bf3dc0bf65bd: Prediction completed successfully
+[2026-01-22 21:36:02,456: INFO/ForkPoolWorker-13] Task tasks.run_prediction_task[c34aecdbc493dcb5f981c273046529268d481a31d83830cee195bf3dc0bf65bd] succeeded in 0.5708938550014864s: {'jobId': 'c34aecdbc493dcb5f981c273046529268d481a31d83830cee195bf3dc0bf65bd', 'status': 'completed', 'classification': {'name': 'RNA Sequence', 'isPredicted': True, 'children': [{...}, {...}, {...}, {...}]}, 'attention': {'sequence': 'TCAGGAGTTCGAGACCAGCCTGCTCTGTCTCAAAAAAATAAAAATAAAAAAATAAATAAATAACCTTTAATTTAGTGAGACTTCATATAGAATTGTTTTAATGTTTAATATAGACCATTTGTTTTAGGTGAATTTAACAATTTCATACTGTGATTAAGATTAATTTCTTTTTCTGACTTCTACCAGAAAGCAGGAATTATGTTTCAAATGGACAATCATTTACCAAACCTTGTTAATCTGAATGAAGATCCACAACTATCTGAGATGCTGCTATATATGATAAAAGAAGGAACAACTACAGTTGGAAAGTATAAACCAAACTCAAGCCATGATATTCAGTTATCTGGGGTGCTGATTGCTGATGATCATTGGTATGTTAATCCTCTAAAAAAAAAGAAAAGGCACCTGTTCTATATCTTGATAACATGTGGTTTCCTTCATATGGCATATTCGTTGATACTGATCGTTTGGTAGAATTCTTCAAACCCATTGTTTAGTCAGGAAAAACATACATTCTGAGTGTGTTATAAGGATGATAGGTCAGTTACTCTCAATATAAAGTACAGTGTAATGCTCTCTCTGTTTTTGTTTTGGCATACTTGATCTGTTGATTGAAGAATAATTTATTTTCTTGCAATTATAATGATGCACATGCAAGTAAACTATCTATCTTACATAACAGAATTTTTGGTTGGATTGACCAATTTAAAAATGTTACTTTATGTGAATTTTGTTCATATGAATGGAATACTTGTATATATTGTTGGAATGATAGCGTATGTAAACTTTT...', ...}}
+[2026-01-22 21:38:55,396: INFO/MainProcess] Connected to redis://localhost:6379/0
+[2026-01-22 21:38:55,401: INFO/MainProcess] mingle: searching for neighbors
+[2026-01-22 21:38:56,414: INFO/MainProcess] mingle: all alone
+[2026-01-22 21:38:56,427: INFO/MainProcess] celery@DESKTOP-1I4C9F0 ready.
+[2026-01-22 21:40:54,433: INFO/MainProcess] Connected to redis://localhost:6379/0
+[2026-01-22 21:40:54,438: INFO/MainProcess] mingle: searching for neighbors
+[2026-01-22 21:40:55,452: INFO/MainProcess] mingle: all alone
+[2026-01-22 21:40:55,466: INFO/MainProcess] celery@DESKTOP-1I4C9F0 ready.
+[2026-01-22 21:41:06,446: INFO/MainProcess] Task tasks.run_prediction_task[8866df542642895050efe7aa1e24b89a885017d7274eef1e87e1c1c7370d4db4] received
+[2026-01-22 21:41:06,450: INFO/ForkPoolWorker-13] Task 8866df542642895050efe7aa1e24b89a885017d7274eef1e87e1c1c7370d4db4: Starting prediction for sequence length: 633
+[2026-01-22 21:41:06,451: INFO/ForkPoolWorker-13] Task 8866df542642895050efe7aa1e24b89a885017d7274eef1e87e1c1c7370d4db4: Generated job_id: 8866df542642895050efe7aa1e24b89a885017d7274eef1e87e1c1c7370d4db4
+[2026-01-22 21:41:06,451: INFO/ForkPoolWorker-13] Task 8866df542642895050efe7aa1e24b89a885017d7274eef1e87e1c1c7370d4db4: Padded sequence to 1001 with 368 'N's (left: 184, right: 184)
+[2026-01-22 21:41:06,451: INFO/ForkPoolWorker-13] Task 8866df542642895050efe7aa1e24b89a885017d7274eef1e87e1c1c7370d4db4: Running LinearFold...
+[2026-01-22 21:41:06,679: INFO/ForkPoolWorker-13] Task 8866df542642895050efe7aa1e24b89a885017d7274eef1e87e1c1c7370d4db4: LinearFold completed
+[2026-01-22 21:41:06,681: INFO/ForkPoolWorker-13] Task 8866df542642895050efe7aa1e24b89a885017d7274eef1e87e1c1c7370d4db4: Running model inference...
+[2026-01-22 21:41:06,902: INFO/ForkPoolWorker-13] Task 8866df542642895050efe7aa1e24b89a885017d7274eef1e87e1c1c7370d4db4: Model inference completed
+[2026-01-22 21:41:06,903: INFO/ForkPoolWorker-13] Task 8866df542642895050efe7aa1e24b89a885017d7274eef1e87e1c1c7370d4db4: Active groups after pruning: {'G', 'C'}
+[2026-01-22 21:41:06,903: INFO/ForkPoolWorker-13] Task 8866df542642895050efe7aa1e24b89a885017d7274eef1e87e1c1c7370d4db4: Processing group 'G':
+[2026-01-22 21:41:06,904: INFO/ForkPoolWorker-13] Task 8866df542642895050efe7aa1e24b89a885017d7274eef1e87e1c1c7370d4db4:   - Nucleotides in sequence: 115.0
+[2026-01-22 21:41:06,904: INFO/ForkPoolWorker-13] Task 8866df542642895050efe7aa1e24b89a885017d7274eef1e87e1c1c7370d4db4:   - Combined attention shape: (1001,)
+[2026-01-22 21:41:06,904: INFO/ForkPoolWorker-13] Task 8866df542642895050efe7aa1e24b89a885017d7274eef1e87e1c1c7370d4db4:   - Top K for group: 3
+[2026-01-22 21:41:06,904: INFO/ForkPoolWorker-13] Task 8866df542642895050efe7aa1e24b89a885017d7274eef1e87e1c1c7370d4db4:   - Max attention in group: 0.019554257510506545
+[2026-01-22 21:41:06,906: INFO/ForkPoolWorker-13] Task 8866df542642895050efe7aa1e24b89a885017d7274eef1e87e1c1c7370d4db4: Processing group 'C':
+[2026-01-22 21:41:06,907: INFO/ForkPoolWorker-13] Task 8866df542642895050efe7aa1e24b89a885017d7274eef1e87e1c1c7370d4db4:   - Nucleotides in sequence: 91.0
+[2026-01-22 21:41:06,907: INFO/ForkPoolWorker-13] Task 8866df542642895050efe7aa1e24b89a885017d7274eef1e87e1c1c7370d4db4:   - Combined attention shape: (1001,)
+[2026-01-22 21:41:06,907: INFO/ForkPoolWorker-13] Task 8866df542642895050efe7aa1e24b89a885017d7274eef1e87e1c1c7370d4db4:   - Top K for group: 3
+[2026-01-22 21:41:06,907: INFO/ForkPoolWorker-13] Task 8866df542642895050efe7aa1e24b89a885017d7274eef1e87e1c1c7370d4db4:   - Max attention in group: 0.33333300692121764
+[2026-01-22 21:41:06,913: INFO/ForkPoolWorker-13] Task 8866df542642895050efe7aa1e24b89a885017d7274eef1e87e1c1c7370d4db4: GCN visualization stats: total edges=729
+[2026-01-22 21:41:06,915: INFO/ForkPoolWorker-13] Task 8866df542642895050efe7aa1e24b89a885017d7274eef1e87e1c1c7370d4db4: GCN visualization stats: nodes=633, valid edges=729
+[2026-01-22 21:41:06,921: INFO/ForkPoolWorker-13] Task 8866df542642895050efe7aa1e24b89a885017d7274eef1e87e1c1c7370d4db4: Result cached in Redis for job_id: 8866df542642895050efe7aa1e24b89a885017d7274eef1e87e1c1c7370d4db4
+[2026-01-22 21:41:06,921: INFO/ForkPoolWorker-13] Task 8866df542642895050efe7aa1e24b89a885017d7274eef1e87e1c1c7370d4db4: Prediction completed successfully
+[2026-01-22 21:41:06,938: INFO/ForkPoolWorker-13] Task tasks.run_prediction_task[8866df542642895050efe7aa1e24b89a885017d7274eef1e87e1c1c7370d4db4] succeeded in 0.49119006999899284s: {'jobId': '8866df542642895050efe7aa1e24b89a885017d7274eef1e87e1c1c7370d4db4', 'status': 'completed', 'classification': {'name': 'RNA Sequence', 'isPredicted': True, 'children': [{...}, {...}, {...}, {...}]}, 'attention': {'sequence': 'TCAGGAGTTCGAGACCAGAAATGGACAATCATTTACCAAACCTTGTTAATCTGAATGAAGATCCACAACTATCTGAGATGCTGCTATATATGATAAAAGAAGGAACAACTACAGTTGGAAAGTATAAACCAAACTCAAGCCATGATATTCAGTTATCTGGGGTGCTGATTGCTGATGATCATTGGTATGTTAATCCTCTAAAAAAAAAGAAAAGGCACCTGTTCTATATCTTGATAACATGTGGTTTCCTTCATATGGCATATTCGTTGATACTGATCGTTTGGTAGAATTCTTCAAACCCATTGTTTAGTCAGGAAAAACATACATTCTGAGTGTGTTATAAGGATGATAGGTCAGTTACTCTCAATATAAAGTACAGTGTAATGCTCTCTCTGTTTTTGTTTTGGCATACTTGATCTGTTGATTGAAGAATAATTTATTTTCTTGCAATTATAATGATGCACATGCAAGTAAACTATCTATCTTACATAACAGAATTTTTGGTTGGATTGACCAATTTAAAAATGTTACTTTATGTGAATTTTGTTCATATGAATGGAATACTTGTATATATTGTTGGAATGATAGCGTATGTAAACTTTTTTGACTCTGCATTGTGTTTCCAAGATTTGT', 'weights': [{...}, {...}, {...}, {...}, {...}, {...}]}, 'gcn': {'nodes': [{...}, {...}, {...}, {...}, {...}, {...}, {...}, {...}, {...}, {...}, {...}, {...., ...]}}
+[2026-01-22 21:44:24,188: INFO/MainProcess] Connected to redis://localhost:6379/0
+[2026-01-22 21:44:24,193: INFO/MainProcess] mingle: searching for neighbors
+[2026-01-22 21:44:25,206: INFO/MainProcess] mingle: all alone
+[2026-01-22 21:44:25,224: INFO/MainProcess] celery@DESKTOP-1I4C9F0 ready.
+[2026-01-22 21:44:30,551: INFO/MainProcess] Task tasks.run_prediction_task[7d4bcd33d3b9b246eb09730eaa083f76087947a3bc5abe2faaa09890e3e0123e] received
+[2026-01-22 21:44:30,555: INFO/ForkPoolWorker-13] Task 7d4bcd33d3b9b246eb09730eaa083f76087947a3bc5abe2faaa09890e3e0123e: Starting prediction for sequence length: 713
+[2026-01-22 21:44:30,556: INFO/ForkPoolWorker-13] Task 7d4bcd33d3b9b246eb09730eaa083f76087947a3bc5abe2faaa09890e3e0123e: Generated job_id: 7d4bcd33d3b9b246eb09730eaa083f76087947a3bc5abe2faaa09890e3e0123e
+[2026-01-22 21:44:30,556: INFO/ForkPoolWorker-13] Task 7d4bcd33d3b9b246eb09730eaa083f76087947a3bc5abe2faaa09890e3e0123e: Padded sequence to 1001 with 288 'N's (left: 144, right: 144)
+[2026-01-22 21:44:30,556: INFO/ForkPoolWorker-13] Task 7d4bcd33d3b9b246eb09730eaa083f76087947a3bc5abe2faaa09890e3e0123e: Running LinearFold...
+[2026-01-22 21:44:30,556: ERROR/ForkPoolWorker-13] Task 7d4bcd33d3b9b246eb09730eaa083f76087947a3bc5abe2faaa09890e3e0123e: LinearFold failed: {'step': 'linearfold', 'error_type': 'FileNotFoundError', 'message': 'LinearFold可执行文件不存在: LinearFold/linearfold', 'sequence_length': 1001}
+[2026-01-22 21:44:30,558: ERROR/ForkPoolWorker-13] Task 7d4bcd33d3b9b246eb09730eaa083f76087947a3bc5abe2faaa09890e3e0123e: Task failed with error: FileNotFoundError - LinearFold execution failed: LinearFold可执行文件不存在: LinearFold/linearfold
+[2026-01-22 21:44:30,605: ERROR/ForkPoolWorker-13] Task tasks.run_prediction_task[7d4bcd33d3b9b246eb09730eaa083f76087947a3bc5abe2faaa09890e3e0123e] raised unexpected: UnpickleableExceptionWrapper('tasks', 'TaskError', ('Prediction task failed: LinearFold execution failed: LinearFold可执行文件不存在: LinearFold/linearfold',), "TaskError('Prediction task failed: LinearFold execution failed: LinearFold可执行文件不存在: LinearFold/linearfold')")
+Traceback (most recent call last):
+  File "/home/dc/miniconda3/envs/learn/lib/python3.12/site-packages/celery/app/trace.py", line 453, in trace_task
+    R = retval = fun(*args, **kwargs)
+                 ^^^^^^^^^^^^^^^^^^^^
+  File "/home/dc/miniconda3/envs/learn/lib/python3.12/site-packages/celery/app/trace.py", line 736, in __protected_call__
+    return self.run(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dc/vscode/vscode20260119/rgcnformer_mobile_web/backend/tasks.py", line 608, in run_prediction_task
+    raise TaskError(f"Prediction task failed: {str(e)}", error_info)
+celery.utils.serialization.UnpickleableExceptionWrapper: TaskError('Prediction task failed: LinearFold execution failed: LinearFold可执行文件不存在: LinearFold/linearfold')
+[2026-01-22 21:45:00,082: INFO/MainProcess] Task tasks.run_prediction_task[038a416aa999af2df19f2ff1fdab545ca041352d49c50570a7c50aa87d97e45d] received
+[2026-01-22 21:45:00,084: INFO/ForkPoolWorker-13] Task 038a416aa999af2df19f2ff1fdab545ca041352d49c50570a7c50aa87d97e45d: Starting prediction for sequence length: 813
+[2026-01-22 21:45:00,084: INFO/ForkPoolWorker-13] Task 038a416aa999af2df19f2ff1fdab545ca041352d49c50570a7c50aa87d97e45d: Generated job_id: 038a416aa999af2df19f2ff1fdab545ca041352d49c50570a7c50aa87d97e45d
+[2026-01-22 21:45:00,084: INFO/ForkPoolWorker-13] Task 038a416aa999af2df19f2ff1fdab545ca041352d49c50570a7c50aa87d97e45d: Padded sequence to 1001 with 188 'N's (left: 94, right: 94)
+[2026-01-22 21:45:00,084: INFO/ForkPoolWorker-13] Task 038a416aa999af2df19f2ff1fdab545ca041352d49c50570a7c50aa87d97e45d: Running LinearFold...
+[2026-01-22 21:45:00,433: INFO/ForkPoolWorker-13] Task 038a416aa999af2df19f2ff1fdab545ca041352d49c50570a7c50aa87d97e45d: LinearFold completed
+[2026-01-22 21:45:00,435: INFO/ForkPoolWorker-13] Task 038a416aa999af2df19f2ff1fdab545ca041352d49c50570a7c50aa87d97e45d: Running model inference...
+[2026-01-22 21:45:00,532: INFO/ForkPoolWorker-13] Task 038a416aa999af2df19f2ff1fdab545ca041352d49c50570a7c50aa87d97e45d: Model inference completed
+[2026-01-22 21:45:00,532: INFO/ForkPoolWorker-13] Task 038a416aa999af2df19f2ff1fdab545ca041352d49c50570a7c50aa87d97e45d: Active groups after pruning: {'U'}
+[2026-01-22 21:45:00,533: INFO/ForkPoolWorker-13] Task 038a416aa999af2df19f2ff1fdab545ca041352d49c50570a7c50aa87d97e45d: Processing group 'U':
+[2026-01-22 21:45:00,533: INFO/ForkPoolWorker-13] Task 038a416aa999af2df19f2ff1fdab545ca041352d49c50570a7c50aa87d97e45d:   - Nucleotides in sequence: 297.0
+[2026-01-22 21:45:00,533: INFO/ForkPoolWorker-13] Task 038a416aa999af2df19f2ff1fdab545ca041352d49c50570a7c50aa87d97e45d:   - Combined attention shape: (1001,)
+[2026-01-22 21:45:00,533: INFO/ForkPoolWorker-13] Task 038a416aa999af2df19f2ff1fdab545ca041352d49c50570a7c50aa87d97e45d:   - Top K for group: 3
+[2026-01-22 21:45:00,533: INFO/ForkPoolWorker-13] Task 038a416aa999af2df19f2ff1fdab545ca041352d49c50570a7c50aa87d97e45d:   - Max attention in group: 0.2594986714024028
+[2026-01-22 21:45:00,535: INFO/ForkPoolWorker-13] Task 038a416aa999af2df19f2ff1fdab545ca041352d49c50570a7c50aa87d97e45d: GCN visualization stats: total edges=903
+[2026-01-22 21:45:00,536: INFO/ForkPoolWorker-13] Task 038a416aa999af2df19f2ff1fdab545ca041352d49c50570a7c50aa87d97e45d: GCN visualization stats: nodes=813, valid edges=903
+[2026-01-22 21:45:00,554: INFO/ForkPoolWorker-13] Task 038a416aa999af2df19f2ff1fdab545ca041352d49c50570a7c50aa87d97e45d: Result cached in Redis for job_id: 038a416aa999af2df19f2ff1fdab545ca041352d49c50570a7c50aa87d97e45d
+[2026-01-22 21:45:00,554: INFO/ForkPoolWorker-13] Task 038a416aa999af2df19f2ff1fdab545ca041352d49c50570a7c50aa87d97e45d: Prediction completed successfully
+[2026-01-22 21:45:00,565: INFO/ForkPoolWorker-13] Task tasks.run_prediction_task[038a416aa999af2df19f2ff1fdab545ca041352d49c50570a7c50aa87d97e45d] succeeded in 0.48227821700129425s: {'jobId': '038a416aa999af2df19f2ff1fdab545ca041352d49c50570a7c50aa87d97e45d', 'status': 'completed', 'classification': {'name': 'RNA Sequence', 'isPredicted': True, 'children': [{...}, {...}, {...}, {...}]}, 'attention': {'sequence': 'TCAGGAGTTCGAAGACTCTGTCTCAAAAAAATAAAAATAAAAAAATAAATAAATAACCTTTAATTTAGTGAGACTTCATATAGAATTGTTTTAATGTTTAATATAGACCATTTGTTTTAGGTGAATTTAACAATTTCATACTGTGATTAAGATTAATTTCTTTTTCTGACTTCTACCAGAAAGCAGGAATTATGTTTCAAATGGACAATCATTTACCAAACCTTGTTAATCTGAATGAAGATCCACAACTATCTGAGATGCTGCTATATATGATAAAAGAAGGAACAACTACAGTTGGAAAGTATAAACCAAACTCAAGCCATGATATTCAGTTATCTGGGGTGCTGATTGCTGATGATCATTGGTATGTTAATCCTCTAAAAAAAAAGAAAAGGCACCTGTTCTATATCTTGATAACATGTGGTTTCCTTCATATGGCATATTCGTTGATACTGATCGTTTGGTAGAATTCTTCAAACCCATTGTTTAGTCAGGAAAAACATACATTCTGAGTGTGTTATAAGGATGATAGGTCAGTTACTCTCAATATAAAGTACAGTGTAATGCTCTCTCTGTTTTTGTTTTGGCATACTTGATCTGTTGATTGAAGAATAATTTATTTTCTTGCAATTATAATGATGCACATGCAAGTAAACTATCTATCTTACATAACAGAATTTTTGGTTGGATTGACCAATTTAAAAATGTTACTTTATGTGAATTTTGTTCATATGAATGGAATACTTGTATATATTGTTGGAATGATAGCGTATGTAAACTTTTTTGACTC...', ...}}

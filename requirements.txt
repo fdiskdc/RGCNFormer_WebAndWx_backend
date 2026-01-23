@@ -1,0 +1,9 @@
+Flask
+Flask-Cors
+torch
+torch-geometric
+numpy
+gunicorn
+redis
+captum
+celery
