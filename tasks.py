@@ -2,6 +2,7 @@ from celery import Celery
 import redis
 import json
 import hashlib
+import uuid
 import torch
 import numpy as np
 from torch_geometric.data import Batch
@@ -566,7 +567,7 @@ def run_prediction_task(self, original_sequence, target_class_id=None, top_k=Non
             try:
                 # Serialize response to JSON
                 response_json = json.dumps(response, ensure_ascii=False)
-                # Store in Redis with the job_id as key
+                # Store in Redis with job_id as key
                 redis_client.setex(f"task:{job_id}", config.REDIS_CACHE_TTL, response_json)
                 logger.info(f"Task {self.request.id}: Result cached in Redis for job_id: {job_id}")
             except Exception as e:
@@ -604,5 +605,103 @@ def run_prediction_task(self, original_sequence, target_class_id=None, top_k=Non
                 super().__init__(message)
                 self.error_info = error_info
 
-        # Raise with structured error info
-        raise TaskError(f"Prediction task failed: {str(e)}", error_info)
+
+# ============================================================================
+# Batch Processing Task for WeChat Mini Program
+# ============================================================================
+
+@celery_app.task(name='tasks.process_sequence_in_batch', bind=True)
+def process_sequence_in_batch(self, job_id, sequence_data, index, target_class_id=None, top_k=None):
+    """
+    Celery task for processing a single sequence within a batch.
+    Updates Redis state after completion.
+    
+    Args:
+        job_id (str): Batch job ID
+        sequence_data (str): RNA sequence to process
+        index (int): Index of this sequence in the batch (0-4)
+        target_class_id (int, optional): Specific class ID for attention visualization
+        top_k (int, optional): Number of top sites to display
+    
+    Returns:
+        dict: Complete prediction result for this sequence
+    """
+    logger.info(f"Task {self.request.id}: Processing sequence {index} for batch {job_id}")
+    
+    try:
+        # Call the existing prediction task
+        result = run_prediction_task(sequence_data, target_class_id, top_k)
+        
+        # Update Redis state for this batch
+        if redis_client:
+            try:
+                # Get current results list
+                results_json = redis_client.hget(f'batch_job:{job_id}', 'results')
+                results = json.loads(results_json) if results_json else []
+                
+                # Append result with index
+                result_with_index = {
+                    "index": index,
+                    "jobId": result.get("jobId"),
+                    "sequence": sequence_data,
+                    "status": "completed",
+                    "classification": result.get("classification"),
+                    "attention": result.get("attention"),
+                    "gcn": result.get("gcn")
+                }
+                results.append(result_with_index)
+                
+                # Update results in Redis
+                redis_client.hset(f'batch_job:{job_id}', 'results', json.dumps(results, ensure_ascii=False))
+                
+                # Increment completed_sequences counter atomically
+                completed = redis_client.hincrby(f'batch_job:{job_id}', 'completed_sequences', 1)
+                logger.info(f"Task {self.request.id}: Sequence {index} completed. Total completed: {completed}")
+                
+                # Check if all sequences are done
+                total_sequences = int(redis_client.hget(f'batch_job:{job_id}', 'total_sequences') or 0)
+                if completed >= total_sequences:
+                    # Update status to COMPLETED
+                    redis_client.hset(f'batch_job:{job_id}', 'status', 'COMPLETED')
+                    logger.info(f"Task {self.request.id}: Batch {job_id} fully completed ({completed}/{total_sequences} sequences)")
+                
+            except Exception as e:
+                logger.error(f"Task {self.request.id}: Failed to update Redis state for batch {job_id}: {e}")
+                # Don't fail the task if Redis update fails
+        
+        return result
+        
+    except Exception as e:
+        # Handle failure - still update Redis to mark this sequence as failed
+        if redis_client:
+            try:
+                results_json = redis_client.hget(f'batch_job:{job_id}', 'results')
+                results = json.loads(results_json) if results_json else []
+                
+                # Append error result
+                result_with_index = {
+                    "index": index,
+                    "sequence": sequence_data,
+                    "status": "failed",
+                    "error": str(e)
+                }
+                results.append(result_with_index)
+                
+                # Update results in Redis
+                redis_client.hset(f'batch_job:{job_id}', 'results', json.dumps(results, ensure_ascii=False))
+                
+                # Increment completed_sequences counter (even if failed)
+                completed = redis_client.hincrby(f'batch_job:{job_id}', 'completed_sequences', 1)
+                
+                # Check if all sequences are done (including failures)
+                total_sequences = int(redis_client.hget(f'batch_job:{job_id}', 'total_sequences') or 0)
+                if completed >= total_sequences:
+                    # Update status to COMPLETED (even with some failures)
+                    redis_client.hset(f'batch_job:{job_id}', 'status', 'COMPLETED')
+                    logger.warning(f"Task {self.request.id}: Batch {job_id} completed with {completed} sequences (some may have failed)")
+                
+            except Exception as redis_error:
+                logger.error(f"Task {self.request.id}: Failed to update Redis error state: {redis_error}")
+        
+        # Re-raise the exception
+        raise

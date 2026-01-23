@@ -3,6 +3,8 @@ from flask_cors import CORS
 import json
 import redis
 import hashlib
+import uuid
+import time
 import numpy as np
 import torch
 import requests
@@ -279,9 +281,189 @@ def wx_login():
         }), 500
 
 # ============================================================================
-# Prediction Endpoint
+# WeChat Mini Program Batch Task Submission Endpoint (Refactored)
 # ============================================================================
 
+@app.route('/api/v1/wx-submit-task', methods=['POST'])
+def wx_submit_task():
+    """
+    Submit up to 5 prediction tasks for asynchronous processing with progress tracking.
+    Designed for WeChat mini-program to handle multiple RNA sequences.
+    Returns a batch job_id for tracking progress.
+    Empty sequences are skipped (not processed).
+    
+    Request body format:
+    {
+        "rnaSequence1": "sequence1",
+        "rnaSequence2": "sequence2",
+        "rnaSequence3": "sequence3",
+        "rnaSequence4": "sequence4",
+        "rnaSequence5": "sequence5",
+        "targetClassId": 0,  // Optional
+        "topK": 10           // Optional
+    }
+    
+    Response format:
+    {
+        "code": 200,
+        "message": "任务已提交",
+        "data": {
+            "job_id": "your-generated-uuid"
+        }
+    }
+    """
+    # Import process_sequence_in_batch task
+    from tasks import process_sequence_in_batch
+    
+    # Get data from request JSON body
+    data = request.get_json()
+    
+    if not data:
+        return jsonify({"error": "No data provided"}), 400
+    
+    # Extract sequences
+    sequences = []
+    for i in range(1, 6):
+        seq_key = f'rnaSequence{i}'
+        sequence = data.get(seq_key, '')
+        sequences.append(sequence)
+    
+    # Extract optional parameters
+    target_class_id = data.get('targetClassId')
+    top_k = data.get('topK')
+    
+    # Validate: at least one non-empty sequence
+    non_empty_sequences = [(i, seq) for i, seq in enumerate(sequences) if seq and seq.strip()]
+    if not non_empty_sequences:
+        return jsonify({"error": "At least one non-empty RNA sequence is required"}), 400
+    
+    logger.info(f"Received WeChat mini-program task submission with {len(non_empty_sequences)} valid sequences")
+    
+    # Generate unique batch job_id
+    batch_job_id = str(uuid.uuid4())
+    logger.info(f"Generated batch job_id: {batch_job_id}")
+    
+    # Initialize Redis state for this batch job
+    if redis_client:
+        try:
+            redis_key = f'batch_job:{batch_job_id}'
+            redis_client.hset(redis_key, 'status', 'PENDING')
+            redis_client.hset(redis_key, 'total_sequences', str(len(non_empty_sequences)))
+            redis_client.hset(redis_key, 'completed_sequences', '0')
+            redis_client.hset(redis_key, 'results', json.dumps([]))
+            redis_client.hset(redis_key, 'creation_time', str(int(time.time())))
+            # Set TTL for batch job (24 hours)
+            redis_client.expire(redis_key, 86400)
+            logger.info(f"Initialized Redis state for batch {batch_job_id}")
+        except Exception as e:
+            logger.error(f"Failed to initialize Redis state for batch {batch_job_id}: {e}")
+            return jsonify({"error": "Failed to initialize batch job"}), 500
+    
+    # Submit Celery tasks for each non-empty sequence
+    for index, sequence in non_empty_sequences:
+        try:
+            process_sequence_in_batch.apply_async(
+                args=[batch_job_id, sequence, index, target_class_id, top_k]
+            )
+            logger.info(f"Submitted sequence {index} for batch {batch_job_id}")
+        except Exception as e:
+            import traceback
+            logger.error(f"Failed to submit sequence {index} for batch {batch_job_id}: {e}")
+            logger.error(f"Traceback:\n{traceback.format_exc()}")
+            # Continue with other sequences even if one fails
+    
+    # Return batch job_id to client
+    response = {
+        "code": 200,
+        "message": "任务已提交",
+        "data": {
+            "job_id": batch_job_id
+        }
+    }
+    
+    logger.info(f"WeChat mini-program batch task submitted successfully. Batch ID: {batch_job_id}")
+    
+    return jsonify(response), 202
+
+
+# ============================================================================
+# WeChat Mini Program Task Progress Polling Endpoint
+# ============================================================================
+
+@app.route('/api/v1/wx-task-progress/<job_id>', methods=['GET'])
+def wx_task_progress(job_id):
+    """
+    Retrieve the progress of a batch task by job_id.
+    Returns status, progress, and completed results.
+    
+    Response format:
+    {
+        "code": 200,
+        "message": "成功",
+        "data": {
+            "job_id": "your-uuid",
+            "status": "PROCESSING",
+            "total_sequences": 5,
+            "completed_sequences": 2,
+            "results": [
+                { "index": 0, "jobId": "...", "data": "..." },
+                { "index": 1, "jobId": "...", "data": "..." }
+            ]
+        }
+    }
+    """
+    if not redis_client:
+        return jsonify({"error": "Redis not available"}), 500
+    
+    try:
+        redis_key = f'batch_job:{job_id}'
+        
+        # Check if job_id exists in Redis
+        if not redis_client.exists(redis_key):
+            return jsonify({
+                "code": 404,
+                "message": "任务不存在",
+                "error": "Job not found"
+            }), 404
+        
+        # Get all fields from Redis hash
+        job_data = redis_client.hgetall(redis_key)
+        
+        # Parse data
+        status = job_data.get('status', 'UNKNOWN')
+        total_sequences = int(job_data.get('total_sequences', 0))
+        completed_sequences = int(job_data.get('completed_sequences', 0))
+        results_json = job_data.get('results', '[]')
+        results = json.loads(results_json) if results_json else []
+        
+        # Prepare response data
+        data = {
+            "job_id": job_id,
+            "status": status,
+            "total_sequences": total_sequences,
+            "completed_sequences": completed_sequences,
+            "results": results
+        }
+        
+        logger.info(f"Retrieved progress for batch {job_id}: {completed_sequences}/{total_sequences} completed")
+        
+        response = {
+            "code": 200,
+            "message": "成功",
+            "data": data
+        }
+        
+        return jsonify(response), 200
+        
+    except Exception as e:
+        import traceback
+        logger.error(f"Error retrieving task progress: {e}")
+        logger.error(f"Traceback:\n{traceback.format_exc()}")
+        return jsonify({
+            "code": 500,
+            "message": "获取进度失败",
+            "error": str(e)
+        }), 500
 @app.route('/api/v1/submit-task', methods=['POST'])
 def submit_task():
     """
