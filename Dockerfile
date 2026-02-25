@@ -44,9 +44,9 @@ RUN cd LinearFold && make [cite: 15]
 RUN cp config_docker.py config.py && cp tasks_docker.py tasks.py [cite: 15]
 
 # 9. 设置运行环境变量 (防止多进程死锁)
-ENV OMP_NUM_THREADS=1 [cite: 1, 16]
-ENV MKL_NUM_THREADS=1 [cite: 1, 16]
-ENV PYTHONUNBUFFERED=1 [cite: 16]
+ENV OMP_NUM_THREADS=1 
+ENV MKL_NUM_THREADS=1 
+ENV PYTHONUNBUFFERED=1 
 
 EXPOSE 8000
 
