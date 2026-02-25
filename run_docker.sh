@@ -3,7 +3,7 @@
  # @Author: Chao Deng && chaodeng987@outlook.com
  # @Date: 2026-02-25 03:34:03
  # @LastEditors: Chao Deng && chaodeng987@outlook.com
- # @LastEditTime: 2026-02-25 03:35:35
+ # @LastEditTime: 2026-02-25 03:54:26
  # @FilePath: /backend/run_docker.sh
  # @Description: 
  # 那只是一场游戏一场梦
@@ -14,17 +14,47 @@
  # Copyright (c) 2026 by ${Chao Deng}, All Rights Reserved. 
 ### 
 
-# 检查变量是否存在，如果不存在则要求输入
+
+
+#!/bin/bash
+
+# --- 1. 微信敏感信息 (必填，无默认值) ---
 if [ -z "$WX_APPID" ]; then
-    read -p "请输入 WX_APPID (默认 wxcb604a93d537d38a): " WX_APPID
-    export WX_APPID=${WX_APPID:-wxcb604a93d537d38a}
+    read -p "请输入 WX_APPID (必填): " WX_APPID
+    if [ -z "$WX_APPID" ]; then
+        echo "❌ 错误: WX_APPID 不能为空！"
+        exit 1
+    fi
+    export WX_APPID
 fi
 
 if [ -z "$WX_SECRET" ]; then
-    read -p "请输入 WX_SECRET (默认 73e7bea0faafabef192ab5310688f0a2): " WX_SECRET
-    export WX_SECRET=${WX_SECRET:-73e7bea0faafabef192ab5310688f0a2}
+    read -p "请输入 WX_SECRET (必填): " WX_SECRET
+    if [ -z "$WX_SECRET" ]; then
+        echo "❌ 错误: WX_SECRET 不能为空！"
+        exit 1
+    fi
+    export WX_SECRET
 fi
 
-# 启动容器
-echo "🚀 正在使用指定的微信参数启动服务..."
-docker compose up -d --build
+# --- 2. 性能参数 (根据您的要求，现在也是必填，无默认值) ---
+if [ -z "$GUNICORN_WORKERS" ]; then
+    read -p "请输入 GUNICORN_WORKERS 数量 (建议根据 CPU 核心数填写，如 1 或 2): " GUNICORN_WORKERS
+    if [ -z "$GUNICORN_WORKERS" ]; then
+        echo "❌ 错误: GUNICORN_WORKERS 不能为空！"
+        exit 1
+    fi
+    export GUNICORN_WORKERS
+fi
+
+if [ -z "$CELERY_CONCURRENCY" ]; then
+    read -p "请输入 CELERY_CONCURRENCY 数量 (建议填写 1): " CELERY_CONCURRENCY
+    if [ -z "$CELERY_CONCURRENCY" ]; then
+        echo "❌ 错误: CELERY_CONCURRENCY 不能为空！"
+        exit 1
+    fi
+    export CELERY_CONCURRENCY
+fi
+
+# --- 3. 启动确认 ---
+echo "----------------
