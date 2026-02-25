@@ -17,6 +17,11 @@ class Config:
         self.REDIS_HOST = os.getenv('REDIS_HOST', 'redis')
         self.REDIS_PORT = int(os.getenv('REDIS_PORT', 6379))
         self.REDIS_DB = int(os.getenv('REDIS_DB', 0))
+        self.WX_APPID = os.getenv('WX_APPID')
+        self.WX_SECRET = os.getenv('WX_SECRET')
+        
+        if not self.WX_APPID or not self.WX_SECRET:
+            print("❌ 警告: WX_APPID 或 WX_SECRET 未配置！")
 
         # Celery Configuration
         self.CELERY_BROKER_URL = os.getenv(

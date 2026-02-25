@@ -10,6 +10,8 @@ services:
     volumes:
       - .:/app  # 将当前目录映射到容器的 /app
     environment:
+      - WX_APPID=${WX_APPID}
+      - WX_SECRET=${WX_SECRET}
       - REDIS_URL=redis://redis:6379/0  # 建议通过环境变量传递连接串
     restart: always
     depends_on:
