@@ -13,10 +13,17 @@ class Config:
 
     def __init__(self):
         """Initialize configuration from environment variables."""
-        # Redis Configuration
+        # 核心修改：优先读取环境变量 REDIS_HOST，默认指向 docker 服务名 'redis'
         self.REDIS_HOST = os.getenv('REDIS_HOST', 'redis')
         self.REDIS_PORT = int(os.getenv('REDIS_PORT', 6379))
         self.REDIS_DB = int(os.getenv('REDIS_DB', 0))
+
+        # 动态拼接 URL
+        redis_url = f'redis://{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}'
+        self.CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', redis_url)
+        self.CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', redis_url)
+        
+        # 微信配置（对应你之前的需求）
         self.WX_APPID = os.getenv('WX_APPID')
         self.WX_SECRET = os.getenv('WX_SECRET')
         

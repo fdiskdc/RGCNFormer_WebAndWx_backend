@@ -12,7 +12,7 @@ services:
     environment:
       - WX_APPID=${WX_APPID}
       - WX_SECRET=${WX_SECRET}
-      - REDIS_URL=redis://redis:6379/0  # 建议通过环境变量传递连接串
+      - REDIS_HOST=redis
     restart: always
     depends_on:
       - redis
@@ -22,11 +22,13 @@ services:
     build: .
     container_name: rgcn_worker
     # 使用与 start_backend.sh 一致的 Celery 参数
-    command: celery -A tasks.celery_app worker --concurrency=1 --loglevel=info
+    command: celery -A tasks_docker.celery_app worker --concurrency=1 --loglevel=info
     volumes:
       - .:/app
     environment:
-      - REDIS_URL=redis://redis:6379/0
+      - REDIS_HOST=redis
+      - WX_APPID=${WX_APPID}
+      - WX_SECRET=${WX_SECRET}
     restart: always
     depends_on:
       - redis
