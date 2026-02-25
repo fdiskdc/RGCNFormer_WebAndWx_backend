@@ -1,0 +1,37 @@
+services:
+  # Flask 后端服务
+  backend:
+    build: .
+    container_name: rgcn_backend
+    # 保持与原脚本一致的 Gunicorn 配置
+    command: gunicorn -w 1 -b 0.0.0.0:8000 --timeout 120 wsgi:app
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app  # 将当前目录映射到容器的 /app
+    environment:
+      - REDIS_URL=redis://redis:6379/0  # 建议通过环境变量传递连接串
+    restart: always
+    depends_on:
+      - redis
+
+  # Celery Worker 服务
+  worker:
+    build: .
+    container_name: rgcn_worker
+    # 使用与 start_backend.sh 一致的 Celery 参数
+    command: celery -A tasks.celery_app worker --concurrency=1 --loglevel=info
+    volumes:
+      - .:/app
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+    restart: always
+    depends_on:
+      - redis
+      - backend
+
+  # Redis 服务 (作为消息中间件)
+  redis:
+    image: redis:alpine
+    container_name: rgcn_redis
+    restart: always
