@@ -18,17 +18,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     && rm -rf /var/lib/apt/lists/* 
 
-# 3. 配置 pip 使用阿里云镜像源
+# 3. 配置 pip
 RUN pip install --no-cache-dir --upgrade pip && \
     pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/
 
-# 4. --- 关键步骤：安装 CPU 版 PyTorch 和 PyG 扩展库 ---
+# 4. --- 关键修正部分 ---
 
-# 第一步：安装指定版本的 CPU 版 torch
+# 第一步：安装 CPU 版 PyTorch
 RUN pip install --no-cache-dir torch==2.0.1+cpu -f https://download.pytorch.org/whl/torch_stable.html
 
-# 第二步：安装匹配的二进制版扩展库 (scatter, sparse, cluster, spline-conv)
-# 这一步非常关键，使用 -f 指定 PyG 官方的 CPU 编译仓库，避开本地编译
+# 第二步：安装 PyG 的四个底层二进制扩展库 (CPU版)
 RUN pip install --no-cache-dir \
     torch-scatter \
     torch-sparse \
@@ -36,13 +35,16 @@ RUN pip install --no-cache-dir \
     torch-spline-conv \
     -f https://data.pyg.org/whl/torch-2.0.1+cpu.html
 
-# 第三步：安装其余依赖
+# 第三步：【显式安装】torch-geometric
+# 放在安装 requirements.txt 之前，确保它能认到上面安装好的底层库
+RUN pip install --no-cache-dir torch-geometric
+
+# 第四步：安装其他剩余依赖
 COPY requirements.txt .
-# 强烈建议：从你的 requirements.txt 中手动删掉以下几行：
-# torch, torch-scatter, torch-sparse, torch-cluster, torch-spline-conv
+# 提醒：务必确保 requirements.txt 里没有上述已安装的库
 RUN pip install --no-cache-dir -r requirements.txt
 
-# 5. 复制代码、编译 LinearFold 等后续操作保持不变
+# 5. 复制、编译 LinearFold、覆盖配置
 COPY . .
 RUN cd LinearFold && make
 RUN cp config_docker.py config.py && cp tasks_docker.py tasks.py
