@@ -3,7 +3,7 @@
  # @Author: Chao Deng && chaodeng987@outlook.com
  # @Date: 2026-02-25 03:34:03
  # @LastEditors: Chao Deng && chaodeng987@outlook.com
- # @LastEditTime: 2026-02-25 03:54:26
+ # @LastEditTime: 2026-02-25 03:57:02
  # @FilePath: /backend/run_docker.sh
  # @Description: 
  # 那只是一场游戏一场梦
@@ -13,7 +13,6 @@
  # DOI: 10.3390/rs17142354
  # Copyright (c) 2026 by ${Chao Deng}, All Rights Reserved. 
 ### 
-
 
 
 #!/bin/bash
@@ -57,4 +56,12 @@ if [ -z "$CELERY_CONCURRENCY" ]; then
 fi
 
 # --- 3. 启动确认 ---
-echo "----------------
+echo "---------------------------------------"
+echo "🚀 所有必要参数已就绪，准备启动..."
+echo "   - WX_APPID: $WX_APPID"
+echo "   - GUNICORN_WORKERS: $GUNICORN_WORKERS"
+echo "   - CELERY_CONCURRENCY: $CELERY_CONCURRENCY"
+echo "---------------------------------------"
+
+# 使用 docker-compose 启动并强制重新构建
+docker compose up -d --build
