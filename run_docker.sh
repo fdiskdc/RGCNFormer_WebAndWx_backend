@@ -3,7 +3,7 @@
  # @Author: Chao Deng && chaodeng987@outlook.com
  # @Date: 2026-02-25 03:34:03
  # @LastEditors: Chao Deng && chaodeng987@outlook.com
- # @LastEditTime: 2026-02-25 03:34:08
+ # @LastEditTime: 2026-02-25 03:35:35
  # @FilePath: /backend/run_docker.sh
  # @Description: 
  # 那只是一场游戏一场梦
@@ -27,4 +27,4 @@ fi
 
 # 启动容器
 echo "🚀 正在使用指定的微信参数启动服务..."
-docker-compose up -d --build
+docker compose up -d --build
