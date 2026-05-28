@@ -17,10 +17,13 @@ Sub-modules:
 
 import torch
 import torch.nn as nn
+import logging
 from torch_geometric.data import Data, Batch
 from torch_geometric.nn import GCNConv, global_add_pool
 from torch_geometric.utils import softmax
 from typing import Optional, Tuple
+
+logger = logging.getLogger(__name__)
 
 # Import GROUP_TO_CLASS_INDICES for hierarchical head
 from common import GROUP_TO_CLASS_INDICES
@@ -537,15 +540,15 @@ class HierarchicalClassQueryHeadPooling(nn.Module):
 
         # 2. Group-wise Independent Projectors (Derivation)
         self.group_projectors = nn.ModuleList()
-        print(f"Initializing HierarchicalClassQueryHeadPooling with group_to_class_indices: {group_to_class_indices}")
+        logger.info(f"Initializing HierarchicalClassQueryHeadPooling with group_to_class_indices: {group_to_class_indices}")
         for g_idx in range(self.num_groups):
             group_name = self.group_names[g_idx]
             if group_name in group_to_class_indices:
                 num_subclasses = len(group_to_class_indices[group_name])
-                print(f"  Group {g_idx} ('{group_name}'): {num_subclasses} subclasses, indices: {group_to_class_indices[group_name]}")
+                logger.info(f"  Group {g_idx} ('{group_name}'): {num_subclasses} subclasses, indices: {group_to_class_indices[group_name]}")
             else:
                 num_subclasses = 0
-                print(f"  Group {g_idx} ('{group_name}'): NOT found in group_to_class_indices")
+                logger.info(f"  Group {g_idx} ('{group_name}'): NOT found in group_to_class_indices")
             
             # MLP: Group_Query -> Subclass_Queries
             projector = nn.Sequential(

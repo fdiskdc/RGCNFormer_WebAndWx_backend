@@ -85,6 +85,35 @@ class Config:
         # Default Top-K
         self.DEFAULT_TOP_K = int(os.getenv('DEFAULT_TOP_K', 3))
 
+        # Model Comparison CSV Configuration
+        self.MODEL_COMPARISON_CSV_DIR = os.getenv(
+            'MODEL_COMPARISON_CSV_DIR',
+            os.path.join(os.path.dirname(__file__), 'data')
+        )
+        self.MODEL_COMPARISON_FILES = {
+            'ModX': 'modx_res.csv',
+            'MultiRM': 'multirm_res.csv',
+            'DCPRES': 'res.csv',
+        }
+
+        # Dataset Comparison Excel File
+        self.DATASET_COMPARISON_XLSX = os.getenv(
+            'DATASET_COMPARISON_XLSX',
+            os.path.join(os.path.dirname(__file__), 'data', 'CORA-CITE-AMAP-BAT-EAT.xlsx')
+        )
+
+        # UMAP Visualization Data Path
+        self.UMAP_DATA_PATH = os.getenv(
+            'UMAP_DATA_PATH',
+            os.path.join(os.path.dirname(__file__), 'data/umap_human_data.json')
+        )
+
+        # CORA UMAP Visualization Data Path
+        self.UMAP_CORA_DATA_PATH = os.getenv(
+            'UMAP_CORA_DATA_PATH',
+            os.path.join(os.path.dirname(__file__), 'data/umap_cora_data.json')
+        )
+
     def setup_logging(self, name: str = None, log_file: str = None) -> logging.Logger:
         """
         Set up logging configuration.

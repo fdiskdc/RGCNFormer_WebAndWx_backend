@@ -1,6 +1,8 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 import json
+import csv
+import os
 import redis
 import hashlib
 import uuid
@@ -129,6 +131,34 @@ def health():
         "device": str(device),
         "checkpoint": checkpoint_path
     })
+
+# ============================================================================
+# Sample Sequence Endpoint (for Workspace Input Block)
+# ============================================================================
+
+_sample_sequences = None
+
+def _load_sample_sequences():
+    global _sample_sequences
+    if _sample_sequences is None:
+        try:
+            data_path = os.path.join(os.path.dirname(__file__), 'data', 'sample_sequences.json')
+            with open(data_path, 'r') as f:
+                _sample_sequences = json.load(f)['sequences']
+        except Exception as e:
+            logger.warning(f"Failed to load sample sequences: {e}")
+            _sample_sequences = []
+    return _sample_sequences
+
+@app.route('/api/v1/sample-sequence', methods=['GET'])
+def get_sample_sequence():
+    """Return a random sample sequence for workspace input block."""
+    sequences = _load_sample_sequences()
+    if not sequences:
+        return jsonify({'sequence': ''})
+    import random
+    seq = random.choice(sequences)
+    return jsonify({'sequence': seq})
 
 # ============================================================================
 # WeChat Mini Program Login Endpoint
@@ -1194,6 +1224,524 @@ def visualize_gcn_aggregation():
     except Exception as e:
         import traceback
         error_msg = f"GCN Aggregation error: {str(e)}"
+        logger.error(f"ERROR: {error_msg}")
+        logger.error(f"Traceback:\n{traceback.format_exc()}")
+        return jsonify({
+            "error": error_msg,
+            "detail": str(e),
+            "type": type(e).__name__
+        }), 500
+
+
+# ============================================================================
+# Model Comparison Endpoint
+# ============================================================================
+
+METRIC_COLUMNS = ['Acc', 'AUC', 'AUPRC', 'Precision', 'Recall', 'F1', 'MCC', 'Sn', 'Sp']
+
+
+def compute_model_metrics_from_csv(csv_path: str) -> dict:
+    """
+    Compute mean metrics from a model comparison CSV file.
+
+    Args:
+        csv_path: Path to the CSV file
+
+    Returns:
+        Dictionary with metric names as keys and mean values as values
+    """
+    metrics = {col: [] for col in METRIC_COLUMNS}
+
+    try:
+        with open(csv_path, 'r', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                for col in METRIC_COLUMNS:
+                    if col in row and row[col]:
+                        try:
+                            metrics[col].append(float(row[col]))
+                        except ValueError:
+                            pass
+    except Exception as e:
+        logger.error(f"Error reading CSV file {csv_path}: {e}")
+        raise
+
+    return {col: sum(values) / len(values) if values else 0.0 for col, values in metrics.items()}
+
+
+@app.route('/api/v1/model-comparison', methods=['GET'])
+def get_model_comparison():
+    """
+    Get model comparison data from CSV files.
+    Returns mean metrics for each model across all classes.
+    """
+    try:
+        csv_dir = config.MODEL_COMPARISON_CSV_DIR
+        model_files = config.MODEL_COMPARISON_FILES
+
+        models = []
+        for model_name, csv_filename in model_files.items():
+            csv_path = os.path.join(csv_dir, csv_filename)
+
+            if not os.path.exists(csv_path):
+                logger.error(f"CSV file not found: {csv_path}")
+                return jsonify({
+                    "error": f"CSV file not found for model {model_name}",
+                    "detail": f"File {csv_path} does not exist"
+                }), 404
+
+            try:
+                metrics = compute_model_metrics_from_csv(csv_path)
+                models.append({
+                    "name": model_name,
+                    "display_name": model_name,
+                    "metrics": metrics
+                })
+                logger.info(f"Loaded model comparison data for {model_name}")
+            except Exception as e:
+                logger.error(f"Error processing CSV for {model_name}: {e}")
+                return jsonify({
+                    "error": f"Failed to process CSV for model {model_name}",
+                    "detail": str(e)
+                }), 500
+
+        response = {
+            "models": models,
+            "metric_names": METRIC_COLUMNS
+        }
+
+        logger.info(f"Model comparison data returned for {len(models)} models")
+        return jsonify(response), 200
+
+    except Exception as e:
+        import traceback
+        error_msg = f"Model comparison error: {str(e)}"
+        logger.error(f"ERROR: {error_msg}")
+        logger.error(f"Traceback:\n{traceback.format_exc()}")
+        return jsonify({
+            "error": error_msg,
+            "detail": str(e),
+            "type": type(e).__name__
+        }), 500
+
+
+# ============================================================================
+# DCPRES Classification Heatmap Endpoint
+# ============================================================================
+
+@app.route('/api/v1/rgcnformer-classification-heatmap', methods=['GET'])
+def get_rgcnformer_classification_heatmap():
+    """
+    Get DCPRES per-class classification performance data for heatmap visualization.
+    Returns the full 12-class x 9-metric data from res.csv.
+    """
+    try:
+        csv_path = os.path.join(
+            config.MODEL_COMPARISON_CSV_DIR,
+            config.MODEL_COMPARISON_FILES.get('RGCNFormer', 'res.csv')
+        )
+
+        if not os.path.exists(csv_path):
+            logger.error(f"DCPRES CSV file not found: {csv_path}")
+            return jsonify({
+                "error": "DCPRES CSV file not found",
+                "detail": f"File {csv_path} does not exist"
+            }), 404
+
+        classes = []
+        heatmap_data = []
+
+        with open(csv_path, 'r', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                class_name = row.get('Class', '')
+                classes.append(class_name)
+                row_data = {"class": class_name}
+                for col in METRIC_COLUMNS:
+                    if col in row and row[col]:
+                        try:
+                            row_data[col] = float(row[col])
+                        except ValueError:
+                            row_data[col] = 0.0
+                heatmap_data.append(row_data)
+
+        response = {
+            "model_name": "DCPRES",
+            "classes": classes,
+            "metric_names": METRIC_COLUMNS,
+            "data": heatmap_data
+        }
+
+        logger.info(f"DCPRES heatmap data returned: {len(classes)} classes, {len(METRIC_COLUMNS)} metrics")
+        return jsonify(response), 200
+
+    except Exception as e:
+        import traceback
+        error_msg = f"DCPRES heatmap error: {str(e)}"
+        logger.error(f"ERROR: {error_msg}")
+        logger.error(f"Traceback:\n{traceback.format_exc()}")
+        return jsonify({
+            "error": error_msg,
+            "detail": str(e),
+            "type": type(e).__name__
+        }), 500
+
+
+# ============================================================================
+# Dataset Comparison Heatmap Endpoint
+# ============================================================================
+
+@app.route('/api/v1/dataset-comparison-heatmap', methods=['GET'])
+def get_dataset_comparison_heatmap():
+    """
+    Get multi-dataset comparison performance data for heatmap visualization.
+    Reads from CORA-CITE-AMAP-BAT-EAT.xlsx with 6 datasets x 4 metrics x 9 models.
+    """
+    try:
+        import re
+        import openpyxl
+
+        xlsx_path = config.DATASET_COMPARISON_XLSX
+        if not os.path.exists(xlsx_path):
+            logger.error(f"Dataset comparison Excel file not found: {xlsx_path}")
+            return jsonify({
+                "error": "Excel file not found",
+                "detail": f"File {xlsx_path} does not exist"
+            }), 404
+
+        wb = openpyxl.load_workbook(xlsx_path, data_only=True)
+        ws = wb['Sheet1']
+
+        model_names = [cell.value for cell in ws[1][2:]]  # DAEGC, DyFSS, ..., DCPRES
+        dataset_names = []
+        metric_names = ['NMI', 'ACC', 'ARI', 'F1']
+
+        rows_data = []
+        current_dataset = None
+
+        for row in ws.iter_rows(min_row=2, max_row=ws.max_row, values_only=True):
+            dataset_val = row[0]
+            metric_val = row[1]
+
+            if dataset_val is not None and dataset_val != 'None':
+                current_dataset = dataset_val
+                dataset_names.append(current_dataset)
+            elif dataset_val == 'None' and current_dataset is not None:
+                pass
+            else:
+                current_dataset = None
+
+            row_label = f"{current_dataset}-{metric_val}"
+            row_dict = {"row": row_label}
+
+            for col_idx, model_name in enumerate(model_names):
+                cell_val = row[col_idx + 2]
+                if cell_val == '—' or cell_val is None:
+                    row_dict[model_name] = None
+                else:
+                    match = re.match(r"([\d.]+)", str(cell_val))
+                    if match:
+                        row_dict[model_name] = float(match.group(1))
+                    else:
+                        row_dict[model_name] = None
+
+            rows_data.append(row_dict)
+
+        response = {
+            "dataset_names": dataset_names,
+            "metric_names": metric_names,
+            "model_names": model_names,
+            "row_labels": [r["row"] for r in rows_data],
+            "data": rows_data
+        }
+
+        logger.info(f"Dataset comparison heatmap returned: {len(dataset_names)} datasets, {len(metric_names)} metrics, {len(model_names)} models")
+        return jsonify(response), 200
+
+    except Exception as e:
+        import traceback
+        error_msg = f"Dataset comparison heatmap error: {str(e)}"
+        logger.error(f"ERROR: {error_msg}")
+        logger.error(f"Traceback:\n{traceback.format_exc()}")
+        return jsonify({
+            "error": error_msg,
+            "detail": str(e),
+            "type": type(e).__name__
+        }), 500
+
+
+# ============================================================================
+# RGCNFormer Localization Performance Endpoint
+# ============================================================================
+
+LOC_COMPARISON_FILES = {
+    'RGCNFormer': 'rgcnformer_loc.csv',
+    'ModX': 'modx_loc.csv',
+    'MultiRM': 'multirm_loc.csv',
+}
+
+K_VALUE_COLUMNS = ['Top-1', 'Top-3', 'Top-5', 'Top-7', 'Top-10', 'Top-20', 'Top-50']
+K_VALUES = [1, 3, 5, 7, 10, 20, 50]
+
+
+@app.route('/api/v1/rgcnformer-localization', methods=['GET'])
+def get_rgcnformer_localization():
+    """
+    Get RGCNFormer localization performance data.
+    Returns donut chart data (12 classes x 7 Top-K values) and per-class statistics.
+    """
+    try:
+        loc_csv_path = os.path.join(config.MODEL_COMPARISON_CSV_DIR, 'rgcnformer_loc.csv')
+        stat_csv_path = os.path.join(config.MODEL_COMPARISON_CSV_DIR, 'statistic_loc.csv')
+
+        if not os.path.exists(loc_csv_path):
+            logger.error(f"Localization CSV not found: {loc_csv_path}")
+            return jsonify({
+                "error": "Localization CSV file not found",
+                "detail": f"File {loc_csv_path} does not exist"
+            }), 404
+
+        classes = []
+        class_names = []
+        heatmap = []
+
+        with open(loc_csv_path, 'r', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                class_id = row.get('Class', '')
+                name = row.get('Name', '')
+                classes.append(class_id)
+                class_names.append(name)
+                row_values = []
+                for col in K_VALUE_COLUMNS:
+                    try:
+                        row_values.append(float(row.get(col, 0)))
+                    except (ValueError, TypeError):
+                        row_values.append(0.0)
+                heatmap.append(row_values)
+
+        statistics = []
+        if os.path.exists(stat_csv_path):
+            with open(stat_csv_path, 'r', encoding='utf-8') as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    statistics.append({
+                        "class": row.get('Class', ''),
+                        "Mean": float(row.get('Mean', 0)),
+                        "Median": float(row.get('Median', 0)),
+                        "Mode": int(float(row.get('Mode', 0))),
+                        "Mode_Ratio": float(row.get('Mode_Ratio(%)', 0)),
+                        "Sequence_Count": int(float(row.get('Sequence_Count', 0))),
+                        "Min_Value": int(float(row.get('Min_Value', 0))),
+                        "Max_Value": int(float(row.get('Max_Value', 0))),
+                        "Standard_Deviation": float(row.get('Standard_Deviation', 0)),
+                    })
+
+        response = {
+            "model_name": "DCPRES",
+            "classes": classes,
+            "class_names": class_names,
+            "k_labels": K_VALUE_COLUMNS,
+            "k_values": K_VALUES,
+            "heatmap": heatmap,
+            "statistics": statistics
+        }
+
+        logger.info(f"Localization data returned: {len(classes)} classes, {len(K_VALUE_COLUMNS)} Top-K values")
+        return jsonify(response), 200
+
+    except Exception as e:
+        import traceback
+        error_msg = f"Localization error: {str(e)}"
+        logger.error(f"ERROR: {error_msg}")
+        logger.error(f"Traceback:\n{traceback.format_exc()}")
+        return jsonify({
+            "error": error_msg,
+            "detail": str(e),
+            "type": type(e).__name__
+        }), 500
+
+
+# ============================================================================
+# RGCNFormer Localization Model Comparison Endpoint
+# ============================================================================
+
+@app.route('/api/v1/rgcnformer-loc-comparison', methods=['GET'])
+def get_rgcnformer_loc_comparison():
+    """
+    Get localization model comparison data for bubble chart visualization.
+    Returns per-class Top-K performance for DCPRES, ModX, and MultiRM.
+    """
+    try:
+        models = []
+
+        for model_name, csv_filename in LOC_COMPARISON_FILES.items():
+            csv_path = os.path.join(config.MODEL_COMPARISON_CSV_DIR, csv_filename)
+
+            if not os.path.exists(csv_path):
+                logger.error(f"Loc comparison CSV not found: {csv_path}")
+                return jsonify({
+                    "error": f"Loc comparison CSV file not found for {model_name}",
+                    "detail": f"File {csv_path} does not exist"
+                }), 404
+
+            classes = []
+            class_names = []
+            heatmap = []
+
+            with open(csv_path, 'r', encoding='utf-8') as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    class_id = row.get('Class', '')
+                    name = row.get('Name', '')
+                    classes.append(class_id)
+                    class_names.append(name)
+                    row_values = []
+                    for col in K_VALUE_COLUMNS:
+                        try:
+                            row_values.append(float(row.get(col, 0)))
+                        except (ValueError, TypeError):
+                            row_values.append(0.0)
+                    heatmap.append(row_values)
+
+            models.append({
+                "name": model_name,
+                "display_name": model_name,
+                "classes": classes,
+                "class_names": class_names,
+                "heatmap": heatmap
+            })
+            logger.info(f"Loaded loc comparison data for {model_name}")
+
+        response = {
+            "models": models,
+            "k_labels": K_VALUE_COLUMNS,
+            "k_values": K_VALUES,
+            "class_names": models[0]["class_names"] if models else []
+        }
+
+        logger.info(f"Loc comparison data returned for {len(models)} models")
+        return jsonify(response), 200
+
+    except Exception as e:
+        import traceback
+        error_msg = f"Loc comparison error: {str(e)}"
+        logger.error(f"ERROR: {error_msg}")
+        logger.error(f"Traceback:\n{traceback.format_exc()}")
+        return jsonify({
+            "error": error_msg,
+            "detail": str(e),
+            "type": type(e).__name__
+        }), 500
+
+
+# ============================================================================
+# UMAP Visualization Data Endpoint
+# ============================================================================
+
+@app.route('/api/v1/umap-data', methods=['GET'])
+def get_umap_data():
+    """
+    Return pre-computed UMAP coordinates and metadata for visualization.
+    Optional query param 'n' to subsample points for faster loading.
+    """
+    try:
+        umap_path = config.UMAP_DATA_PATH
+
+        if not os.path.exists(umap_path):
+            logger.error(f"UMAP data file not found: {umap_path}")
+            return jsonify({
+                "error": "UMAP data not found",
+                "detail": f"File {umap_path} does not exist"
+            }), 404
+
+        with open(umap_path, 'r') as f:
+            data = json.load(f)
+
+        n_param = request.args.get('n', type=int)
+        if n_param and n_param < len(data.get('points', [])):
+            import random
+            points = data['points']
+            label_groups = {}
+            for p in points:
+                label_groups.setdefault(p['label'], []).append(p)
+
+            sampled = []
+            per_label = max(1, n_param // len(label_groups))
+            for label, pts in label_groups.items():
+                n_take = min(per_label, len(pts))
+                sampled.extend(random.sample(pts, n_take))
+
+            data['points'] = sampled
+            data['metadata'] = data.get('metadata', {})
+            data['metadata']['total_points'] = len(sampled)
+            data['metadata']['subsampled'] = True
+            logger.info(f"UMAP subsampled to {len(sampled)} points")
+
+        logger.info(f"UMAP data served: {len(data.get('points', []))} points")
+        return jsonify(data), 200
+
+    except Exception as e:
+        import traceback
+        error_msg = f"UMAP data error: {str(e)}"
+        logger.error(f"ERROR: {error_msg}")
+        logger.error(f"Traceback:\n{traceback.format_exc()}")
+        return jsonify({
+            "error": error_msg,
+            "detail": str(e),
+            "type": type(e).__name__
+        }), 500
+
+
+# ============================================================================
+# CORA UMAP Visualization Data Endpoint
+# ============================================================================
+
+@app.route('/api/v1/umap-cora-data', methods=['GET'])
+def get_umap_cora_data():
+    """
+    Return pre-computed CORA UMAP coordinates and metadata for visualization.
+    Optional query param 'n' to subsample points for faster loading.
+    """
+    try:
+        umap_path = config.UMAP_CORA_DATA_PATH
+
+        if not os.path.exists(umap_path):
+            logger.error(f"CORA UMAP data file not found: {umap_path}")
+            return jsonify({
+                "error": "CORA UMAP data not found",
+                "detail": f"File {umap_path} does not exist"
+            }), 404
+
+        with open(umap_path, 'r') as f:
+            data = json.load(f)
+
+        n_param = request.args.get('n', type=int)
+        if n_param and n_param < len(data.get('points', [])):
+            import random
+            points = data['points']
+            label_groups = {}
+            for p in points:
+                label_groups.setdefault(p['label'], []).append(p)
+
+            sampled = []
+            per_label = max(1, n_param // len(label_groups))
+            for label, pts in label_groups.items():
+                n_take = min(per_label, len(pts))
+                sampled.extend(random.sample(pts, n_take))
+
+            data['points'] = sampled
+            data['metadata'] = data.get('metadata', {})
+            data['metadata']['total_points'] = len(sampled)
+            data['metadata']['subsampled'] = True
+            logger.info(f"CORA UMAP subsampled to {len(sampled)} points")
+
+        logger.info(f"CORA UMAP data served: {len(data.get('points', []))} points")
+        return jsonify(data), 200
+
+    except Exception as e:
+        import traceback
+        error_msg = f"CORA UMAP data error: {str(e)}"
         logger.error(f"ERROR: {error_msg}")
         logger.error(f"Traceback:\n{traceback.format_exc()}")
         return jsonify({

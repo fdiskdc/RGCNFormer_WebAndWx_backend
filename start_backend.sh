@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ============================================================================
-# RGCNFormer Backend Startup Script
+# DCPRES Backend Startup Script
 # ============================================================================
 # This script starts both Gunicorn (Flask) and Celery worker services
 # with proper conda environment activation and auto-configured concurrency.
@@ -54,7 +54,7 @@ CELERY_CONCURRENCY=1
 cd "$(dirname "$0")"
 
 echo "=========================================="
-echo "  RGCNFormer Backend Startup"
+echo "  DCPRES Backend Startup"
 echo "=========================================="
 echo "Conda Environment:  $CONDA_ENV_NAME"
 echo "Working Directory:  $(pwd)"
