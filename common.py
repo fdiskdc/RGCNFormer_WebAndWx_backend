@@ -1,4 +1,46 @@
 """
+common.py - 公共常量与工具 / Common constants & utilities
+
+RGCNFormer 后端共享的常量(NUCLEOTIDE_MAP、MOD_NAMES、标签映射)、数据划分、
+训练/测试函数、checkpoint 保存等。 / Shared constants (NUCLEOTIDE_MAP, MOD_NAMES,
+label mappings), data splits, training/testing functions, checkpoint saving,
+and other helpers used across the backend.
+
+功能模块 / Modules:
+- 分层分类常量:GROUP_TO_CLASS_INDICES、MOD_NAMES、INDEX_TO_NUCLEOTIDE / Hierarchical constants
+- Config 加载(从 .env)/ Config loading from .env
+- Checkpoint 保存/加载 / Checkpoint save/load
+- 多标签数据 Batch Sampler / Multi-label batch samplers
+- 数据划分函数 / Data split helpers
+- 训练/测试函数 / Train/test functions
+
+输入 / Inputs:
+- 训练时:DataLoader、optimizer、model / training: DataLoader, optimizer, model
+- 测试时:model、test_loader、device / testing: model, test_loader, device
+- 各种配置 / various configs
+
+输出 / Outputs:
+- checkpoint 字典、训练指标(loss/acc/f1/mcc)/ checkpoint dict, training metrics
+
+数据流 / Data Flow:
+1. 加载配置 → 构造 DataLoader / Load config, build DataLoader
+2. 训练循环:forward → loss → backward → step / Train loop: fwd, loss, bwd, step
+3. 评估:forward → 指标计算 → 日志 / Eval: fwd, metrics, log
+4. 保存 checkpoint(模型 + 优化器 + epoch)/ Save checkpoint
+
+相关文件 / Related Files:
+- 调用 / Calls: torch、torch_geometric、numpy、pickle
+- 被调用 / Called by: train_*.py、main_model.py、main_model_onnx.py、server.py、tasks.py
+
+使用示例 / Usage Example:
+    from common import MOD_NAMES, INDEX_TO_NUCLEOTIDE
+    print(MOD_NAMES[9])  # 'm6A'
+
+作者 / Author: 项目组 / Project Team
+版本 / Version: 1.0
+"""
+
+"""
 Common utilities for RNA Multi-label Classification Training
 
 This module contains:

@@ -1,3 +1,49 @@
+"""
+human.py - Human RNA 数据集与 LinearFold 集成 / Human RNA dataset + LinearFold integration
+
+RGCNFormer 的核心数据层:封装 RNA 序列 one-hot 编码、k-mer 构造、LinearFold 二级
+结构预测(子进程调用)、基于二级结构的边索引构建,以及 Mer100Dataset 训练数据
+集。 / Core data layer for RGCNFormer: RNA sequence one-hot encoding, k-mer
+construction, LinearFold secondary structure prediction (via subprocess),
+structure-based edge-index construction, and Mer100Dataset training dataset.
+
+功能模块 / Modules:
+- run_linearfold(sequence): 调用 LinearFold 二进制,解析二级结构点括号串 / Run LinearFold binary, parse dot-bracket
+- build_edge_index_from_structure(sequence, structure): 构造 [2, E] 边索引(顺序 + 配对)/ Build edge index (sequential + base-pairing)
+- one_hot_encode_sequence(seq): A/C/G/U → 4 维 one-hot / One-hot encode
+- LABEL_MAPPING: mod_index (1-12) → 模型索引 (0-11) / Mod label mapping
+- INDEX_TO_NUCLEOTIDE: 模型索引 → 核苷酸 / Index to nucleotide
+- Mer100Dataset: PyTorch Dataset,返回 torch_geometric.data.Data / PyTorch Geometric dataset
+
+输入 / Inputs:
+- run_linearfold: sequence: str - RNA 序列(ACGT/ACGU)/ RNA sequence
+- Mer100Dataset: 目录下 *.npy 文件(序列 + 修饰标签 + 位置)/ *.npy files in directory
+
+输出 / Outputs:
+- run_linearfold: str - 点括号二级结构 / dot-bracket structure
+- build_edge_index_from_structure: torch.Tensor [2, E] - 边索引 / edge index
+- Mer100Dataset.__getitem__: torch_geometric.data.Data / PyG Data object
+
+数据流 / Data Flow:
+1. 加载 *.npy(序列、修饰标签、中心位置)/ Load *.npy
+2. one-hot 编码 + k-mer 编码 / one-hot & k-mer
+3. run_linearfold → 点括号结构 / run LinearFold → dot-bracket
+4. build_edge_index_from_structure → PyG Data / build PyG Data
+
+相关文件 / Related Files:
+- 调用 / Calls: LinearFold 子进程、numpy、torch、torch_geometric
+- 被调用 / Called by: server.py、tasks.py、tasks_docker.py、check.py、check_speed.py
+
+使用示例 / Usage Example:
+    seq = "ACGUACGU..."
+    structure = run_linearfold(seq)  # "(((...)))..."
+    edge_index = build_edge_index_from_structure(seq, structure)
+    dataset = Mer100Dataset(root="npy/", split="train")
+    data = dataset[0]
+
+作者 / Author: 项目组 / Project Team
+版本 / Version: 1.0
+"""
 import numpy as np
 import torch
 from torch.utils.data import Dataset
