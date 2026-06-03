@@ -1,3 +1,40 @@
+"""
+tasks_docker.py - Celery 异步任务(Docker 环境) / Celery async tasks (Docker)
+
+与 tasks.py 结构相同,但使用 config_docker.py(REDIS_HOST 默认指向 docker 服务名
+'redis',而 'localhost')。在 docker-compose 容器中跑 Celery worker 时使用。 / Same
+as tasks.py but uses config_docker.py (REDIS_HOST defaults to docker service
+'redis' instead of 'localhost'). Use when running the Celery worker in the
+docker-compose stack.
+
+功能模块 / Modules:
+- celery_app: Celery 实例,broker/backend 指向 docker 'redis' / Celery app, points to docker 'redis'
+- run_prediction_task(job_id, sequence): 异步推理任务 / Async inference task
+
+输入 / Inputs:
+- job_id: str - 任务 ID / Task ID
+- sequence: str - RNA 序列 / RNA sequence
+
+输出 / Outputs:
+- Redis 缓存 + 任务状态 / Redis cache + task state
+
+数据流 / Data Flow:
+1. 容器内 server.py 投递任务 / server.py dispatches (inside container)
+2. celery worker(可能同一容器,可能独立容器)消费任务 / Celery worker consumes
+3. 写结果到 'redis' 服务的 Redis / Write to 'redis' service
+4. 轮询接口通过 docker DNS 读取结果 / Polling reads via docker DNS
+
+相关文件 / Related Files:
+- 调用 / Calls: main_model、human、common、config_docker
+- 被调用 / Called by: server.py(在 docker 容器中运行时) / server.py (in Docker)
+
+使用示例 / Usage Example:
+    # docker-compose up 后,Celery worker 自动启动
+    docker-compose logs -f celery
+
+作者 / Author: 项目组 / Project Team
+版本 / Version: 1.0
+"""
 from celery import Celery
 import redis
 import json

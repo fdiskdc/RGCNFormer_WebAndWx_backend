@@ -1,3 +1,42 @@
+"""
+tasks.py - Celery 异步任务(本地) / Celery async tasks (local)
+
+Celery worker 入口,定义长时推理任务 run_prediction_task(加载模型、跑推理、
+写结果到 Redis)。使用本地 config.py(REDIS_HOST=localhost)。 / Celery worker
+entry. Defines run_prediction_task (load model, run inference, write result to
+Redis). Uses local config.py (REDIS_HOST=localhost).
+
+功能模块 / Modules:
+- celery_app: Celery 实例(broker + backend 都是 Redis) / Celery app (Redis broker + backend)
+- run_prediction_task(job_id, sequence): 长时推理任务 / Long-running inference task
+- 任务结果缓存到 Redis(可被轮询接口读取)/ Results cached in Redis for polling
+
+输入 / Inputs:
+- job_id: str - 任务 ID(SHA256 序列哈希)/ Task ID (SHA256 of sequence)
+- sequence: str - RNA 序列 / RNA sequence
+
+输出 / Outputs:
+- Redis 键:rna_prediction:{job_id} 存 JSON 结果 / Redis key with JSON result
+- 异步任务状态:PENDING / STARTED / SUCCESS / FAILED / Async task state
+
+数据流 / Data Flow:
+1. server.py 投递任务到 Celery / server.py dispatches to Celery
+2. Worker 接收 → 加载模型 / 跑 LinearFold / 跑 forward / Worker: load model, fold, forward
+3. 把结果写入 Redis,标记 SUCCESS / Write result to Redis, mark SUCCESS
+4. server.py 轮询 /api/v1/get-result?jobId=xxx 读 Redis / Polling reads Redis
+
+相关文件 / Related Files:
+- 调用 / Calls: main_model、human、common、config(本地)
+- 被调用 / Called by: server.py(celery_app、run_prediction_task)
+
+使用示例 / Usage Example:
+    celery -A tasks worker --loglevel=info
+    # 启动后,server.py 投递任务
+    result = run_prediction_task.delay("abc123", "ACGU...")
+
+作者 / Author: 项目组 / Project Team
+版本 / Version: 1.0
+"""
 from celery import Celery
 import redis
 import json
