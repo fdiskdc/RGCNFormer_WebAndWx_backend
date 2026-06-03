@@ -1,4 +1,48 @@
 """
+main_model_onnx.py - RGCNFormer 主网络(ONNX 导出友好版) / RGCNFormer (ONNX-friendly)
+
+与 main_model.py 结构相同,但移除了 .item() 调用、简化了 data-dependent 控制流、
+固定张量形状,使模型可被 torch.onnx.export 成功 trace;用于生产环境 ONNX Runtime
+推理,启动比 PyTorch 快约 5×。 / Same structure as main_model.py but with .item()
+calls removed, data-dependent control flow simplified, and tensor shapes fixed
+so torch.onnx.export can trace it. Used for production ONNX Runtime inference
+(~5× faster startup than PyTorch).
+
+功能模块 / Modules:
+- ParallelCNNBlock: 多尺度 CNN(去除数据相关分支)/ Multi-scale CNN (no data-dep branches)
+- GCNBlock: 简化版 GCN(2 层 GCNConv) / Simplified GCN (2-layer GCNConv)
+- ClassQueryHead: ONNX-friendly 类查询头 / ONNX-friendly Class-Query head
+- RNA_ClassQuery_Model: ONNX 兼容顶层封装 / ONNX-compatible top-level wrapper
+
+输入 / Inputs:
+- x: torch.Tensor - [N, 4, 1001] one-hot 编码 / [N, 4, 1001] one-hot sequence
+- edge_index: torch.Tensor - [2, E] 图边 / [2, E] graph edges
+- batch: torch.Tensor - [N] 批索引 / [N] batch indices
+
+输出 / Outputs:
+- logits: torch.Tensor - [B, 12] 12 类分数 / 12-class scores
+- attn_weights: torch.Tensor - 注意力权重 / Attention weights
+
+数据流 / Data Flow:
+1. ParallelCNN → GCN → Class-Query(同 main_model.py,但每步 ONNX-friendly)
+2. 固定 batch 维度由输入张量推断,无 batch.max() / Batch dim inferred from input
+
+相关文件 / Related Files:
+- 调用 / Calls: torch_geometric.GCNConv、common.GROUP_TO_CLASS_INDICES
+- 被调用 / Called by: server.py(ONNX 推理模式)、onnx.py / onnx2.py(导出)
+
+使用示例 / Usage Example:
+    # 导出 ONNX:
+    torch.onnx.export(model, (x, edge_index, batch), "model.onnx", opset_version=14)
+    # ONNX Runtime 推理:
+    import onnxruntime as ort
+    sess = ort.InferenceSession("model.onnx")
+
+作者 / Author: 项目组 / Project Team
+版本 / Version: 1.0
+"""
+
+"""
 RNA_ClassQuery_Model - ONNX EXPORT-FRIENDLY VERSION
 
 Modifications for ONNX export:

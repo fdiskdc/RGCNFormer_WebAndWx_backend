@@ -1,3 +1,48 @@
+"""
+main_model.py - RGCNFormer 主网络(PyTorch) / RGCNFormer backbone (PyTorch)
+
+RNA 12 类多标签分类主模型。结合多尺度 CNN(局部特征)+ GCN(图结构传播)+
+Class-Query 注意力(每类预测)。HierarchicalClassQueryHeadPooling 在 G/A/C/U
+组级别预聚合再派生到 12 类,提升少样本性能。 / RNA 12-class multi-label
+classification model. Combines multi-scale CNN (local features) + GCN (graph
+propagation) + Class-Query attention (per-class prediction). Hierarchical head
+aggregates over A/C/G/U nucleotide groups before deriving 12-class scores, which
+improves few-shot performance.
+
+功能模块 / Modules:
+- ParallelCNNBlock: 多尺度 1D-CNN 特征提取 / Multi-scale 1D-CNN feature extractor
+- GCNBlock: 图卷积块(2 层 GCNConv + residual)/ 2-layer GCNConv with residual
+- ClassQueryHead: 基于 Cross-Attention 的类查询头 / Class-Query cross-attention head
+- HierarchicalClassQueryHeadPooling: 分层头(组级 → 类级)/ Hierarchical head (group → class)
+- RNA_ClassQuery_Model: 顶层封装,组装上述子模块 / Top-level wrapper
+
+输入 / Inputs:
+- x: torch.Tensor - [N, 4, 1001] one-hot 编码 / [N, 4, 1001] one-hot sequence
+- edge_index: torch.Tensor - [2, E] 图边(顺序 + 配对)/ [2, E] graph edges
+- batch: torch.Tensor - [N] 批索引 / [N] batch indices
+
+输出 / Outputs:
+- logits: torch.Tensor - [B, 12] 12 类分数 / 12-class scores
+- attn_weights: torch.Tensor - 注意力权重(用于可视化)/ Attention weights for viz
+
+数据流 / Data Flow:
+1. ParallelCNN 提取多尺度特征 → [N, 1001, C] / Multi-scale feature extraction
+2. GCN 在二级结构图上传播特征 / GCN propagation on structure graph
+3. Class-Query 注意力将可学习 query 与序列特征交叉,得每类分数 / Class-Query cross-attn
+4. 可选 HierarchicalPooling: 组级预聚合 → 派生到 12 类 / Optional hierarchical aggregation
+
+相关文件 / Related Files:
+- 调用 / Calls: torch_geometric(GCNConv, global_add_pool)、common.GROUP_TO_CLASS_INDICES
+- 被调用 / Called by: server.py(同步推理)、tasks.py(异步推理)、main_model_onnx.py(参考)
+
+使用示例 / Usage Example:
+    model = RNA_ClassQuery_Model(in_channels=4, hidden_dim=64, num_classes=12)
+    logits, attn = model(x, edge_index, batch)
+    loss = criterion(logits, y)
+
+作者 / Author: 项目组 / Project Team
+版本 / Version: 1.0
+"""
 
 """
 RNA_ClassQuery_Model - Multi-scale Class-Query Classification Model for RNA
