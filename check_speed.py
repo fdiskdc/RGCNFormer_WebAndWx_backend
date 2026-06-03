@@ -1,5 +1,39 @@
 #!/usr/bin/env python3
 """
+check_speed.py - CPU 推理速度基准 / CPU inference speed benchmark
+
+基准测试:在 CPU 上运行 submit_task 触发的实际推理,分解各步骤耗时(LinearFold
+二级结构、构图、前向传播、IG、UMAP)。 / Benchmark: run actual inference on CPU,
+breaking down the cost of each step (LinearFold structure, graph construction,
+forward, IG, UMAP).
+
+功能模块 / Modules:
+- one_hot_encode_sequence: ACGT/U → 4-d one-hot / one-hot encode
+- 基准测试:多序列,多步骤计时 / benchmark over multiple sequences and steps
+
+输入 / Inputs:
+- 命令行:--num-sequences, --seq-length / CLI args
+
+输出 / Outputs:
+- 各步骤平均耗时(ms)/ Avg per-step time (ms)
+
+数据流 / Data Flow:
+1. 加载模型 / Load model
+2. 对每条序列:fold → encode → forward → 计时 / Per-sequence: fold, encode, forward, time
+3. 汇总报告 / Aggregate report
+
+相关文件 / Related Files:
+- 调用 / Calls: human.run_linearfold、main_model.RNA_ClassQuery_Model
+- 被调用 / Called by: 开发/性能调优期手动运行 / Manual run during perf tuning
+
+使用示例 / Usage Example:
+    python check_speed.py --num-sequences 10 --seq-length 1001
+
+作者 / Author: 项目组 / Project Team
+版本 / Version: 1.0
+"""
+#!/usr/bin/env python3
+"""
 检查human.py和相关模块的推理速度
 测试submit_task()触发的实际推理任务的各个步骤性能
 使用CPU推理

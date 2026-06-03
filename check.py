@@ -1,5 +1,43 @@
 #!/usr/bin/env python3
 """
+check.py - LinearFold 边构建诊断 / LinearFold edge construction diagnostic
+
+诊断脚本:验证 run_linearfold + build_edge_index_from_structure 是否真的生成了
+非顺序边(碱基配对边),而非所有.扁平结构。运行后输出边数与配对边占比。 / Diagnostic
+script: verifies that run_linearfold + build_edge_index_from_structure actually
+produces non-sequential (base-pairing) edges, not just sequential edges from an
+all-flat structure. Prints edge counts and the base-pair ratio.
+
+功能模块 / Modules:
+- analyze_edge_index(edge_index, seq_len): 统计顺序边 / 配对边 / Analyze edge index
+- 主流程:加载测试序列 → run_linearfold → build_edge_index → analyze / Main flow
+
+输入 / Inputs:
+- 内置测试序列 / Built-in test sequences
+- 命令行可选:具体序列 / CLI: optional sequence arg
+
+输出 / Outputs:
+- 标准输出:边数统计、结论 / stdout: edge statistics, verdict
+
+数据流 / Data Flow:
+1. 取测试序列 / Take test sequence
+2. run_linearfold → 点括号结构 / Run LinearFold
+3. build_edge_index_from_structure → [2, E] / Build edges
+4. analyze_edge_index → 报告 / Analyze & report
+
+相关文件 / Related Files:
+- 调用 / Calls: human.run_linearfold、human.build_edge_index_from_structure
+- 被调用 / Called by: 开发期手动运行 / Manual run during dev
+
+使用示例 / Usage Example:
+    python check.py
+    python check.py "ACGUACGU..."
+
+作者 / Author: 项目组 / Project Team
+版本 / Version: 1.0
+"""
+#!/usr/bin/env python3
+"""
 诊断脚本：验证 run_linearfold 和 build_edge_index_from_structure
 是否成功生成碱基配对边（非顺序边）
 
