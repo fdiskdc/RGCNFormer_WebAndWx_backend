@@ -1,4 +1,43 @@
 """
+config.py - 后端配置管理(本地) / Backend config management (local)
+
+从环境变量加载配置,带合理默认值。供 server.py、tasks.py、main_model.py 等在
+本地运行时使用(REDIS_HOST=localhost)。 / Loads configuration from environment
+variables with sensible defaults. Used by server.py, tasks.py, main_model.py
+when running locally (REDIS_HOST=localhost).
+
+功能模块 / Modules:
+- Config 类:Redis / Celery / Model / Server / LinearFold 配置项 / Config class
+- get_logger(name): 获取统一格式的 logger / Get uniformly-formatted logger
+
+输入 / Inputs:
+- 环境变量:REDIS_HOST/PORT/DB、CELERY_BROKER_URL、CELERY_RESULT_BACKEND、
+  CELERY_TASK_TIME_LIMIT、MODEL_CHECKPOINT_PATH、MODEL_CONFIG_PATH、MODEL_DEVICE、
+  MODEL_TARGET_LENGTH、FLASK_HOST/PORT、LOG_LEVEL、LINEARFOLD_PATH / env vars
+
+输出 / Outputs:
+- config: Config 单例(全局可用) / Config singleton (globally accessible)
+- logger: 日志记录器 / Logger
+
+数据流 / Data Flow:
+1. 实例化时读环境变量,赋默认值 / Read env vars on init, fall back to defaults
+2. config 实例被所有模块 import 使用 / Imported and used by all modules
+
+相关文件 / Related Files:
+- 调用 / Calls: os.getenv、logging
+- 被调用 / Called by: server.py、tasks.py、main_model.py、onnx.py、onnx2.py 等
+
+使用示例 / Usage Example:
+    from config import config, get_logger
+    print(config.REDIS_HOST)  # 'localhost'
+    logger = get_logger('my_module')
+    logger.info('started')
+
+作者 / Author: 项目组 / Project Team
+版本 / Version: 1.0
+"""
+
+"""
 Configuration management for RGCNFormer backend.
 
 Loads settings from environment variables with sensible defaults.

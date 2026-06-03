@@ -1,4 +1,46 @@
 """
+config_docker.py - 后端配置管理(Docker 环境) / Backend config (Docker)
+
+与 config.py 结构相同,但默认 REDIS_HOST='redis'(docker-compose 中的服务名)而非
+'localhost',并增加了 WX_APPID / WX_SECRET 用于微信登录。在 Docker 容器中跑
+时使用。 / Same as config.py but defaults REDIS_HOST to 'redis' (the docker-compose
+service name) instead of 'localhost', and adds WX_APPID / WX_SECRET for WeChat
+login. Use when running inside Docker.
+
+功能模块 / Modules:
+- Config 类:同 config.py,默认 docker 网络下的 redis 服务名 / Config class
+- get_logger(name): 统一 logger / unified logger
+- WX_APPID / WX_SECRET: 微信小程序登录凭证 / WeChat mini-program login credentials
+
+输入 / Inputs:
+- 环境变量:同 config.py + WX_APPID + WX_SECRET / env vars
+
+输出 / Outputs:
+- config: Config 单例 / Config singleton
+- logger: 日志 / logger
+
+数据流 / Data Flow:
+1. 实例化时读环境变量 / Read env on init
+2. 校验 WX_APPID / WX_SECRET 是否配置 / Validate WeChat credentials
+3. 被 Docker 容器中各模块使用 / Used by modules in Docker
+
+相关文件 / Related Files:
+- 调用 / Calls: os.getenv、logging
+- 被调用 / Called by: server.py(Docker 模式)、tasks_docker.py、wx-login 路由
+
+使用示例 / Usage Example:
+    # 在 docker-compose 中设置环境变量:
+    environment:
+      - REDIS_HOST=redis
+      - WX_APPID=wx...
+      - WX_SECRET=...
+    from config_docker import config
+
+作者 / Author: 项目组 / Project Team
+版本 / Version: 1.0
+"""
+
+"""
 Configuration management for RGCNFormer backend.
 
 Loads settings from environment variables with sensible defaults.
