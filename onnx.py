@@ -1,3 +1,38 @@
+"""
+onnx.py - PyTorch → ONNX → graph JSON 导出 / PyTorch → ONNX → graph JSON export
+
+加载训练好的模型,导出为 ONNX,解析 ONNX 图,保存为 JSON(供前端可视化使用)。 / Loads
+trained model, exports to ONNX, parses ONNX graph, saves as JSON (for frontend
+visualization).
+
+功能模块 / Modules:
+- export_model_to_json(): 加载 → 导出 ONNX → 解析图 → 存 JSON / Load → export → parse → save
+- 辅助:模型加载、ONNX 检查工具 / helpers: model loading, ONNX check tools
+
+输入 / Inputs:
+- config.MODEL_CHECKPOINT_PATH: .pt 文件 / .pt checkpoint
+- config.MODEL_CONFIG_PATH: 模型超参 JSON / model hyperparameter JSON
+
+输出 / Outputs:
+- *.onnx: ONNX 模型 / ONNX model
+- *.json: 图结构 / graph structure JSON
+
+数据流 / Data Flow:
+1. 读 model_cfg 与 checkpoint / Read cfg & checkpoint
+2. torch.onnx.export → .onnx / export to ONNX
+3. 解析 ONNX → 节点 / 边 → JSON / parse ONNX graph → JSON
+
+相关文件 / Related Files:
+- 调用 / Calls: main_model.RNA_ClassQuery_Model、onnx、torch
+- 被调用 / Called by: 部署期手动运行 / Manual run during deploy
+
+使用示例 / Usage Example:
+    python onnx.py
+    # 产出 model.onnx 与 model_graph.json
+
+作者 / Author: 项目组 / Project Team
+版本 / Version: 1.0
+"""
 import torch
 import json
 import os

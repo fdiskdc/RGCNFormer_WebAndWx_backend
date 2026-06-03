@@ -1,3 +1,38 @@
+"""
+onnx2.py - PyTorch → ONNX → graph JSON 导出(变体) / PyTorch → ONNX → graph JSON (v2)
+
+与 onnx.py 类似,但同时加载原模型(用于权重)与 ONNX 友好模型(用于 trace),用
+torch.jit.trace 生成更稳定/可移植的 ONNX。 / Similar to onnx.py but loads both
+the original model (for weights) and the ONNX-friendly model (for trace), then
+uses torch.jit.trace to produce a more stable/portable ONNX.
+
+功能模块 / Modules:
+- export_model_to_json(): 加载两个模型、copy state_dict、trace、导出 / load both, copy, trace, export
+- 错误处理:trace 失败时回退到 torch.onnx.export / fall back to torch.onnx.export
+
+输入 / Inputs:
+- config.MODEL_CHECKPOINT_PATH: .pt 权重 / checkpoint
+- config.MODEL_CONFIG_PATH: 模型超参 / model hyperparams
+
+输出 / Outputs:
+- *.onnx: ONNX 模型 / ONNX model
+- *.json: 图结构 / graph JSON
+
+数据流 / Data Flow:
+1. 实例化 OriginalModel,加载权重 / Instantiate OriginalModel, load weights
+2. 实例化 OnnxModel,copy 权重 / Instantiate OnnxModel, copy weights
+3. trace → 导出 ONNX → 解析图 / trace, export, parse
+
+相关文件 / Related Files:
+- 调用 / Calls: main_model、main_model_onnx、torch.jit
+- 被调用 / Called by: 部署期手动运行 / Manual run during deploy
+
+使用示例 / Usage Example:
+    python onnx2.py
+
+作者 / Author: 项目组 / Project Team
+版本 / Version: 1.0
+"""
 import torch
 import json
 import os
