@@ -1,3 +1,44 @@
+"""
+server.py - Flask HTTP API 入口 / Flask HTTP API entry
+
+RGCNFormer 可视化系统后端的 HTTP 入口。提供 RNA 序列提交、单条/批量推理、异步
+任务查询、Integrated Gradients 归因、UMAP 嵌入、注意力可视化等接口;通过 Celery
+与 Redis 协调多 worker 长任务。 / Flask entry for RGCNFormer backend. Provides RNA
+sequence submission, single/batch inference, async task polling, IG attribution,
+UMAP embedding, and attention viz endpoints; coordinates long-running tasks across
+workers via Celery + Redis.
+
+功能模块 / Modules:
+- Flask app 初始化(日志、CORS、Redis、模型)/ Flask app init (logging, CORS, Redis, model)
+- 同步推理接口(/api/v1/submit-task, /api/v1/wx-submit-task) / Sync inference
+- 异步任务轮询(/api/v1/get-result, /api/v1/wx-get-result) / Async result polling
+- 可视化接口(/api/v1/ig, /api/v1/umap, attention) / Viz endpoints
+- 微信登录(/api/v1/wx-login) / WeChat login
+
+输入 / Inputs:
+- HTTP 请求:JSON body 含 sequence(s)、taskType 等 / HTTP requests with JSON body
+- 环境变量:.env 提供 REDIS_HOST / MODEL_PATH / LINEARFOLD_PATH / env vars from .env
+
+输出 / Outputs:
+- JSON 响应:jobId、分类概率、注意力权重、IG 归因、UMAP 坐标 / JSON responses
+
+数据流 / Data Flow:
+1. 启动时连接 Redis,加载 RNA_ClassQuery_Model 与 LinearFold 路径 / Connect Redis, load model
+2. 接收请求 → 校验序列 → 走同步推理或投递 Celery 任务 / Validate → sync or async
+3. 同步路径: 实时返回结果;异步路径: 返回 jobId,前端轮询 / Sync returns result; async returns jobId
+4. 异步任务完成时把结果写入 Redis,轮询接口读取 / Async writes to Redis, polling reads
+
+相关文件 / Related Files:
+- 调用 / Calls: main_model.RNA_ClassQuery_Model、human.run_linearfold、common、tasks、config
+- 被调用 / Called by: Gunicorn(wsgi.py)、Cluster_WebAndWx_WxFrontend、RGCNFormer_WebAndWx_WebFrontend
+
+使用示例 / Usage Example:
+    gunicorn -c gunicorn.conf.py wsgi:app
+    curl -X POST http://localhost:8000/api/v1/submit-task -H 'Content-Type: application/json' -d '{"sequence":"ACGU..."}'
+
+作者 / Author: 项目组 / Project Team
+版本 / Version: 1.0
+"""
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 import json
@@ -1239,71 +1280,54 @@ def visualize_gcn_aggregation():
 
 METRIC_COLUMNS = ['Acc', 'AUC', 'AUPRC', 'Precision', 'Recall', 'F1', 'MCC', 'Sn', 'Sp']
 
-
-def compute_model_metrics_from_csv(csv_path: str) -> dict:
-    """
-    Compute mean metrics from a model comparison CSV file.
-
-    Args:
-        csv_path: Path to the CSV file
-
-    Returns:
-        Dictionary with metric names as keys and mean values as values
-    """
-    metrics = {col: [] for col in METRIC_COLUMNS}
-
-    try:
-        with open(csv_path, 'r', encoding='utf-8') as f:
-            reader = csv.DictReader(f)
-            for row in reader:
-                for col in METRIC_COLUMNS:
-                    if col in row and row[col]:
-                        try:
-                            metrics[col].append(float(row[col]))
-                        except ValueError:
-                            pass
-    except Exception as e:
-        logger.error(f"Error reading CSV file {csv_path}: {e}")
-        raise
-
-    return {col: sum(values) / len(values) if values else 0.0 for col, values in metrics.items()}
+MODEL_COMPARISON_XLSX = os.path.join(os.path.dirname(__file__), 'data', 'DCPRES_cls_comp.xlsx')
 
 
 @app.route('/api/v1/model-comparison', methods=['GET'])
 def get_model_comparison():
     """
-    Get model comparison data from CSV files.
-    Returns mean metrics for each model across all classes.
+    Get model comparison data from DCPRES_cls_comp.xlsx.
+    Returns metrics for each model.
     """
     try:
-        csv_dir = config.MODEL_COMPARISON_CSV_DIR
-        model_files = config.MODEL_COMPARISON_FILES
+        import openpyxl
 
+        if not os.path.exists(MODEL_COMPARISON_XLSX):
+            logger.error(f"Model comparison Excel file not found: {MODEL_COMPARISON_XLSX}")
+            return jsonify({
+                "error": "Model comparison Excel file not found",
+                "detail": f"File {MODEL_COMPARISON_XLSX} does not exist"
+            }), 404
+
+        wb = openpyxl.load_workbook(MODEL_COMPARISON_XLSX, data_only=True)
+        ws = wb['Sheet1']
+
+        # Row 1: headers [None, 'Acc', 'AUC', ...]
+        # Row 2+: [ModelName, value, value, ...]
         models = []
-        for model_name, csv_filename in model_files.items():
-            csv_path = os.path.join(csv_dir, csv_filename)
+        for row in ws.iter_rows(min_row=2, max_row=ws.max_row, values_only=True):
+            model_name = row[0]
+            if model_name is None:
+                continue
+            model_name = str(model_name)
+            metrics = {}
+            for col_idx, metric_name in enumerate(METRIC_COLUMNS):
+                cell_val = row[col_idx + 1]
+                if cell_val is not None:
+                    try:
+                        metrics[metric_name] = float(cell_val)
+                    except (ValueError, TypeError):
+                        metrics[metric_name] = 0.0
+                else:
+                    metrics[metric_name] = 0.0
+            models.append({
+                "name": model_name,
+                "display_name": model_name,
+                "metrics": metrics
+            })
+            logger.info(f"Loaded model comparison data for {model_name}")
 
-            if not os.path.exists(csv_path):
-                logger.error(f"CSV file not found: {csv_path}")
-                return jsonify({
-                    "error": f"CSV file not found for model {model_name}",
-                    "detail": f"File {csv_path} does not exist"
-                }), 404
-
-            try:
-                metrics = compute_model_metrics_from_csv(csv_path)
-                models.append({
-                    "name": model_name,
-                    "display_name": model_name,
-                    "metrics": metrics
-                })
-                logger.info(f"Loaded model comparison data for {model_name}")
-            except Exception as e:
-                logger.error(f"Error processing CSV for {model_name}: {e}")
-                return jsonify({
-                    "error": f"Failed to process CSV for model {model_name}",
-                    "detail": str(e)
-                }), 500
+        wb.close()
 
         response = {
             "models": models,
@@ -1566,61 +1590,62 @@ def get_rgcnformer_localization():
 # RGCNFormer Localization Model Comparison Endpoint
 # ============================================================================
 
+LOC_COMPARISON_XLSX = os.path.join(os.path.dirname(__file__), 'data', 'DCPRES_loc_comp.xlsx')
+
+
 @app.route('/api/v1/rgcnformer-loc-comparison', methods=['GET'])
 def get_rgcnformer_loc_comparison():
     """
-    Get localization model comparison data for bubble chart visualization.
-    Returns per-class Top-K performance for DCPRES, ModX, and MultiRM.
+    Get localization model comparison data from DCPRES_loc_comp.xlsx.
+    Returns per-model Top-K performance for bubble chart visualization.
     """
     try:
-        models = []
+        import openpyxl
 
-        for model_name, csv_filename in LOC_COMPARISON_FILES.items():
-            csv_path = os.path.join(config.MODEL_COMPARISON_CSV_DIR, csv_filename)
+        if not os.path.exists(LOC_COMPARISON_XLSX):
+            logger.error(f"Loc comparison Excel file not found: {LOC_COMPARISON_XLSX}")
+            return jsonify({
+                "error": "Loc comparison Excel file not found",
+                "detail": f"File {LOC_COMPARISON_XLSX} does not exist"
+            }), 404
 
-            if not os.path.exists(csv_path):
-                logger.error(f"Loc comparison CSV not found: {csv_path}")
-                return jsonify({
-                    "error": f"Loc comparison CSV file not found for {model_name}",
-                    "detail": f"File {csv_path} does not exist"
-                }), 404
+        wb = openpyxl.load_workbook(LOC_COMPARISON_XLSX, data_only=True)
+        ws = wb['Sheet1']
 
-            classes = []
-            class_names = []
-            heatmap = []
+        # Row 1: headers [None, 'Top-1', 'Top-3', ...]
+        # Row 2+: [ModelName, value, value, ...]
+        model_names = []
+        heatmap = []
 
-            with open(csv_path, 'r', encoding='utf-8') as f:
-                reader = csv.DictReader(f)
-                for row in reader:
-                    class_id = row.get('Class', '')
-                    name = row.get('Name', '')
-                    classes.append(class_id)
-                    class_names.append(name)
-                    row_values = []
-                    for col in K_VALUE_COLUMNS:
-                        try:
-                            row_values.append(float(row.get(col, 0)))
-                        except (ValueError, TypeError):
-                            row_values.append(0.0)
-                    heatmap.append(row_values)
-
-            models.append({
-                "name": model_name,
-                "display_name": model_name,
-                "classes": classes,
-                "class_names": class_names,
-                "heatmap": heatmap
-            })
+        for row in ws.iter_rows(min_row=2, max_row=ws.max_row, values_only=True):
+            model_name = row[0]
+            if model_name is None:
+                continue
+            model_name = str(model_name)
+            model_names.append(model_name)
+            row_values = []
+            for col_idx in range(len(K_VALUE_COLUMNS)):
+                cell_val = row[col_idx + 1]
+                if cell_val is not None:
+                    try:
+                        row_values.append(float(cell_val))
+                    except (ValueError, TypeError):
+                        row_values.append(0.0)
+                else:
+                    row_values.append(0.0)
+            heatmap.append(row_values)
             logger.info(f"Loaded loc comparison data for {model_name}")
 
+        wb.close()
+
         response = {
-            "models": models,
+            "model_names": model_names,
             "k_labels": K_VALUE_COLUMNS,
             "k_values": K_VALUES,
-            "class_names": models[0]["class_names"] if models else []
+            "heatmap": heatmap
         }
 
-        logger.info(f"Loc comparison data returned for {len(models)} models")
+        logger.info(f"Loc comparison data returned: {len(model_names)} models, {len(K_VALUE_COLUMNS)} Top-K values")
         return jsonify(response), 200
 
     except Exception as e:
@@ -1742,6 +1767,227 @@ def get_umap_cora_data():
     except Exception as e:
         import traceback
         error_msg = f"CORA UMAP data error: {str(e)}"
+        logger.error(f"ERROR: {error_msg}")
+        logger.error(f"Traceback:\n{traceback.format_exc()}")
+        return jsonify({
+            "error": error_msg,
+            "detail": str(e),
+            "type": type(e).__name__
+        }), 500
+
+
+# ============================================================================
+# Attention Comparison Endpoint (Pre-computed from .npz files)
+# ============================================================================
+
+ATTENTION_NPZ_FILES = {
+    'mRModN': os.path.join(os.path.dirname(__file__), 'data', 'mrmodn_full_atten.npz'),
+    'MultiRM': os.path.join(os.path.dirname(__file__), 'data', 'multirm_segmented_atten.npz'),
+    'modX': os.path.join(os.path.dirname(__file__), 'data', 'modx_full_atten.npz'),
+    'EvoRMD': os.path.join(os.path.dirname(__file__), 'data', 'evormd_segmented_atten.npz'),
+}
+
+CLASS_NAMES = ['Am', 'Atol', 'Cm', 'Gm', 'Tm', 'Y', 'ac4C', 'm1A', 'm5C', 'm6A', 'm6Am', 'm7G']
+
+
+@app.route('/api/v1/attention-comparison', methods=['GET'])
+def get_attention_comparison():
+    """
+    Get pre-computed attention comparison data for 4 models.
+    Randomly selects 5 samples and returns attention weights for classes with label=1.
+    """
+    try:
+        import numpy as np
+
+        # Check all files exist
+        for model_name, path in ATTENTION_NPZ_FILES.items():
+            if not os.path.exists(path):
+                return jsonify({
+                    "error": f"Attention data file not found for {model_name}",
+                    "detail": f"File {path} does not exist"
+                }), 404
+
+        # Load all models data
+        models_data = {}
+        for model_name, path in ATTENTION_NPZ_FILES.items():
+            data = np.load(path, allow_pickle=True)
+            models_data[model_name] = {
+                'attn_weights': data['attn_weights'],  # [200, 12, 1001]
+                'labels': data['labels'],               # [200, 12]
+                'sites': data['sites'],                 # [200, 1001]
+                'indices': data['indices'],             # [200]
+            }
+
+        # Use first model to determine sample indices (same across all models)
+        num_samples = models_data['mRModN']['attn_weights'].shape[0]
+
+        # Randomly select 5 samples
+        np.random.seed(None)  # True random each time
+        selected_indices = np.random.choice(num_samples, size=min(5, num_samples), replace=False)
+
+        samples = []
+        for idx in selected_indices:
+            idx = int(idx)
+            sample_data = {
+                'index': idx,
+                'models': {}
+            }
+
+            for model_name, mdata in models_data.items():
+                labels = mdata['labels'][idx]  # [12]
+                attn = mdata['attn_weights'][idx]  # [12, 1001]
+                sites = mdata['sites'][idx]  # [1001]
+
+                # Find classes with label=1
+                active_class_indices = np.where(labels == 1)[0].tolist()
+
+                # Get attention only for active classes
+                active_attention = attn[active_class_indices].tolist()
+
+                # Get true sites (positions where sites > 0)
+                true_sites = np.where(sites > 0)[0].tolist()
+
+                sample_data['models'][model_name] = {
+                    'attention': active_attention,
+                    'class_indices': active_class_indices,
+                    'class_names': [CLASS_NAMES[i] for i in active_class_indices],
+                    'true_sites': true_sites,
+                }
+
+            samples.append(sample_data)
+
+        response = {
+            'samples': samples,
+            'class_names': CLASS_NAMES,
+            'model_names': list(ATTENTION_NPZ_FILES.keys()),
+        }
+
+        logger.info(f"Attention comparison data returned: {len(samples)} samples, {len(ATTENTION_NPZ_FILES)} models")
+        return jsonify(response), 200
+
+    except Exception as e:
+        import traceback
+        error_msg = f"Attention comparison error: {str(e)}"
+        logger.error(f"ERROR: {error_msg}")
+        logger.error(f"Traceback:\n{traceback.format_exc()}")
+        return jsonify({
+            "error": error_msg,
+            "detail": str(e),
+            "type": type(e).__name__
+        }), 500
+
+
+@app.route('/api/v1/attention-visualization', methods=['POST'])
+def get_attention_visualization():
+    """
+    Get attention visualization for a user-submitted sequence.
+    Runs model inference and returns attention weights for all 12 classes.
+    """
+    try:
+        data = request.get_json()
+        original_sequence = data.get('rnaSequence', '')
+
+        if not original_sequence:
+            return jsonify({"error": "No sequence provided"}), 400
+
+        logger.info(f"Attention visualization: sequence length={len(original_sequence)}")
+
+        # Store original sequence for response
+        sequence = original_sequence
+
+        # For shorter sequences, pad to 1001; for longer sequences, truncate
+        TARGET_LENGTH = 1001
+        seq_len = len(sequence)
+
+        # Track padding/trimming for index remapping
+        left_padding = 0
+
+        if seq_len != TARGET_LENGTH:
+            if seq_len < TARGET_LENGTH:
+                padding_needed = TARGET_LENGTH - seq_len
+                left_pad = padding_needed // 2
+                left_padding = left_pad
+                sequence = 'N' * left_pad + sequence + 'N' * (padding_needed - left_pad)
+            else:
+                excess = seq_len - TARGET_LENGTH
+                left_trim = excess // 2
+                sequence = sequence[left_trim:seq_len - (excess - left_trim)]
+
+        # Call LinearFold to get secondary structure
+        structures = run_linearfold([sequence])
+        structure = structures[0]
+
+        # Build edge index from structure
+        edge_index = build_edge_index_from_structure(sequence, structure)
+
+        # Prepare model input
+        x = one_hot_encode_sequence(sequence)
+        x = torch.FloatTensor(x)
+
+        # Create batch tensor
+        batch = torch.zeros(len(sequence), dtype=torch.long)
+
+        # Create Batch object
+        data_batch = Batch(x=x, edge_index=edge_index, batch=batch)
+        data_batch = data_batch.to(device)
+
+        # Run model inference
+        with torch.no_grad():
+            output = model(
+                data_batch.x,
+                data_batch.edge_index,
+                data_batch.batch,
+                return_attention=True
+            )
+
+        # Extract attention weights based on model type
+        if model_cfg['use_hierarchical']:
+            # Hierarchical model returns (logits_12, logits_4, attn_weights_12)
+            logits_12 = output[0]  # [1, 12]
+            attn_weights_12 = output[2]  # [1, 12, 1001]
+
+            # Convert to numpy
+            probs = torch.sigmoid(logits_12).cpu().numpy()[0]  # [12]
+            attn = attn_weights_12.cpu().numpy()[0]  # [12, 1001]
+        else:
+            # Simple pooling model returns (logits, attn_weights)
+            logits = output[0]
+            attn_weights = output[1]
+
+            probs = torch.sigmoid(logits).cpu().numpy()[0]  # [12]
+            attn = attn_weights.cpu().numpy()[0]  # [12, 1001]
+
+        # Build response - all 12 classes
+        classes_data = []
+        for i in range(12):
+            # Normalize attention weights
+            attn_i = attn[i]
+            attn_sum = attn_i.sum()
+            if attn_sum > 0:
+                attn_normalized = (attn_i / attn_sum).tolist()
+            else:
+                attn_normalized = attn_i.tolist()
+
+            classes_data.append({
+                'index': i,
+                'name': CLASS_NAMES[i],
+                'probability': float(probs[i]),
+                'attention': attn_normalized,
+            })
+
+        response = {
+            'sequence_length': len(original_sequence),
+            'left_padding': left_padding,
+            'classes': classes_data,
+            'class_names': CLASS_NAMES,
+        }
+
+        logger.info(f"Attention visualization returned for {len(CLASS_NAMES)} classes")
+        return jsonify(response), 200
+
+    except Exception as e:
+        import traceback
+        error_msg = f"Attention visualization error: {str(e)}"
         logger.error(f"ERROR: {error_msg}")
         logger.error(f"Traceback:\n{traceback.format_exc()}")
         return jsonify({
