@@ -1,396 +1,173 @@
-# DCPRES_WebAndWx_backend
+# Cluster 可视化系统后端 / Cluster Visualization Backend
 
-[English](#english) | [中文](#中文)
+## 项目背景 / Project Background
 
----
+本项目是 RGCNFormer RNA 修饰分类系统的**后端服务**,为网页前端与微信小程序提供 HTTP API、模型推理、异步任务调度以及 RNA 二级结构预测能力。
 
-<a name="中文"></a>
-# DCPRES RNA分类后端服务
+This project is the **backend service** of the RGCNFormer RNA modification classification system, providing HTTP API, model inference, async task scheduling, and RNA secondary structure prediction for the web frontend and WeChat mini-program.
 
-## 项目简介
+## 项目作用 / Purpose
 
-DCPRES_WebAndWx_backend 是一个基于深度学习的RNA序列分类后端服务，使用图卷积网络（GCN）和类查询注意力机制实现RNA序列的12类多标签分类。该项目支持Web应用和微信小程序两种前端接入方式，并提供丰富的模型可解释性功能和可视化分析。
+**核心能力** / **Core capabilities**:
+- 接收前端提交的 RNA 序列,触发模型推理(单条或批量)
+- Accept RNA sequences from frontend, trigger model inference (single or batch)
+- 提供同步(ONNX)与异步(Celery)两种推理模式
+- Provide both synchronous (ONNX) and asynchronous (Celery) inference modes
+- 集成 LinearFold 进行 RNA 二级结构预测
+- Integrate LinearFold for RNA secondary structure prediction
+- 提供可视化所需的注意力权重、定位概率、分类结果等数据
+- Expose attention weights, localization probabilities, and classification results for visualization
 
-## 主要特性
+## 技术栈 / Tech Stack
 
-- 🧬 **RNA序列分类**：支持12类RNA分类任务
-- 🧠 **深度学习模型**：结合多尺度CNN、GCN和Class-Query Attention
-- 🔄 **异步处理**：使用Celery实现任务队列和后台处理
-- 📦 **缓存机制**：Redis缓存提升响应速度
-- 🔍 **模型可解释性**：Integrated Gradients和GCN聚合可视化
-- 📊 **模型对比分析**：多模型性能对比（DCPRES, ModX, MultiRM）
-- 🗺️ **UMAP可视化**：RNA序列嵌入的降维可视化
-- 📈 **分类性能热图**：12类×9指标的热力图展示
-- 📱 **微信小程序支持**：完整的用户登录和任务提交接口
-- 🐳 **Docker支持**：一键部署，开箱即用
-- 🌐 **跨域支持**：CORS配置，方便前端集成
+- Python 3.8+
+- Flask + Gunicorn(WSGI HTTP 服务)/ Flask + Gunicorn (WSGI HTTP server)
+- Celery + Redis(异步任务队列)/ Celery + Redis (async task queue)
+- ONNX Runtime(模型推理)/ ONNX Runtime (model inference)
+- PyTorch(模型定义与训练导出)/ PyTorch (model definition & training export)
+- LinearFold(第三方 C++ 库,RNA 二级结构)/ LinearFold (3rd-party C++ lib, RNA secondary structure)
+- Docker / docker-compose(容器化部署)/ Docker (containerized deployment)
 
-## 技术栈
-
-### 核心框架
-- **Flask** - Web应用框架
-- **PyTorch** - 深度学习框架
-- **PyTorch Geometric** - 图神经网络库
-- **Celery** - 分布式任务队列
-- **Redis** - 缓存和消息队列
-
-### 关键组件
-- **LinearFold** - RNA二级结构预测（编译自C++）
-- **Gunicorn** - WSGI HTTP服务器
-- **Captum** - PyTorch模型可解释性库
-
-## 项目结构
+## 目录结构 / Directory Layout
 
 ```
-backend/
-├── LinearFold/              # RNA二级结构预测工具
-│   ├── src/                # C++源代码
-│   ├── bin/                # 编译后的二进制文件
-│   └── Makefile            # 编译配置
-├── json/                   # 配置和数据文件
-│   ├── model_graph.json    # 模型计算图
-│   └── human.json          # 人类标签映射
-├── server.py               # Flask主服务器
-├── main_model.py           # 深度学习模型定义
-├── tasks.py                # Celery异步任务
-├── human.py                # LinearFold接口和工具函数
-├── common.py               # 通用常量和配置
-├── config.py               # 配置文件
-├── Dockerfile              # Docker构建文件
-├── docker-compose.yml      # Docker编排文件
-└── requirements.txt        # Python依赖
+Cluster_WebAndWx_backend/
+├── server.py               # Flask HTTP API 入口(主路由)
+├── main_model.py           # PyTorch 模型推理
+├── main_model_onnx.py      # ONNX Runtime 推理变体
+├── common.py               # 公共常量与工具
+├── human.py                # Human RNA 数据集处理(序列解析、k-mer、构图)
+├── tasks.py                # Celery 异步任务
+├── tasks_docker.py         # Docker 环境下的 Celery 任务变体
+├── config.py               # 路径、端口、模型路径等配置
+├── config_docker.py        # Docker 环境下的配置变体
+├── wsgi.py                 # WSGI 入口(Gunicorn 加载)
+├── onnx.py                 # PyTorch → ONNX 导出脚本
+├── onnx2.py                # ONNX 导出变体(支持更多模型)
+├── check.py                # LinearFold edge 诊断脚本
+├── check_speed.py          # CPU 推理速度基准测试
+├── test_cache.py           # Redis 缓存 + SHA256 jobId 测试
+├── Dockerfile              # Docker 镜像构建
+├── docker-compose.yml      # 多服务编排(backend + celery + redis)
+├── .env.example            # 环境变量示例
+├── requirements.txt        # Python 依赖
+├── start_backend.sh        # 一键启动脚本
+├── stop_backend.sh         # 停止脚本
+├── run_docker.sh           # Docker 启动脚本
+├── epoch_040.pt            # 已训练模型权重(13.8 MB)
+├── data/                   # 运行时数据
+├── json/                   # 缓存/中间结果(JSON)
+└── LinearFold/             # 第三方 RNA 二级结构预测库(子模块)
+    ├── src/                # C++ 源码
+    └── gflags.py           # 参数解析
 ```
 
-## 快速开始
+## 启动方式 / Getting Started
 
-### 环境要求
+### 方式一:本地直接运行(开发模式) / Option 1: Local Dev Run
 
-- Python 3.9+
-- Redis服务器
-- Docker（推荐）
+#### 1. 环境要求 / Prerequisites
+- Python 3.8+
+- Redis(异步任务需要)/ Redis (for async tasks)
+- 已训练模型权重(默认 `epoch_040.pt`)
 
-### 方法1：使用Docker（推荐）
-
+#### 2. 安装依赖 / Install
 ```bash
-# 克隆仓库
-git clone https://github.com/fdiskdc/DCPRES_WebAndWx_backend.git
-cd DCPRES_WebAndWx_backend
-
-# 构建并启动服务
-docker-compose up -d
-
-# 查看日志
-docker-compose logs -f
-```
-
-### 方法2：本地安装
-
-```bash
-# 安装依赖
+cd Cluster_WebAndWx_backend
 pip install -r requirements.txt
+```
 
-# 安装PyTorch Geometric相关包
-pip install torch-scatter torch-sparse torch-cluster torch-spline-conv -f https://data.pyg.org/whl/torch-2.0.1+cpu.html
-pip install torch-geometric
+#### 3. 配置环境变量 / Configure
+```bash
+cp .env.example .env
+# 编辑 .env,设置:
+#   REDIS_HOST=localhost
+#   MODEL_PATH=./epoch_040.pt
+#   LINEARFOLD_PATH=./LinearFold/bin/
+```
 
-# 编译LinearFold
-cd LinearFold
-make
-cd ..
+#### 4. 启动后端 / Start Backend
+```bash
+# 方式 a: 一键脚本 / one-click script
+./start_backend.sh
 
-# 配置Redis
-# 编辑config.py设置Redis连接信息
+# 方式 b: 手动 / manual
+# 终端 1: 启动 Redis / start redis
+redis-server
 
-# 启动Celery Worker
+# 终端 2: 启动 Flask(Gunicorn)/ start flask
+gunicorn -c gunicorn.conf.py wsgi:app
+
+# 终端 3: 启动 Celery worker / start celery
 celery -A tasks worker --loglevel=info
-
-# 启动Flask服务器
-python server.py
-# 或使用Gunicorn
-gunicorn -w 1 -b 0.0.0.0:8000 --timeout 120 wsgi:app
 ```
 
-## API文档
-
-### 基础接口
-
-#### 1. 健康检查
-```http
-GET /api/health
+停止:/ Stop:
+```bash
+./stop_backend.sh
 ```
 
-#### 2. 提交预测任务
-```http
-POST /api/v1/submit-task
-Content-Type: application/json
-
-{
-  "userId": "user123",
-  "rnaSequence": "ACGUACGUACGU...",
-  "targetClassId": 0,
-  "topK": 10
-}
-```
-
-#### 3. 获取预测结果
-```http
-GET /api/v1/results/<job_id>
-```
-
-### 微信小程序接口
-
-#### 1. 微信登录
-```http
-POST /api/v1/wx/login
-Content-Type: application/json
-
-{
-  "loginCode": "wx_login_code",
-  "nickname": "用户昵称",
-  "avatarUrl": "头像URL"
-}
-```
-
-#### 2. 批量提交任务（最多5个序列）
-```http
-POST /api/v1/wx-submit-task
-Content-Type: application/json
-
-{
-  "rnaSequence1": "ACGU...",
-  "rnaSequence2": "CGUA...",
-  "rnaSequence3": "GCAU...",
-  "rnaSequence4": "UAUC...",
-  "rnaSequence5": "ACGU...",
-  "targetClassId": 0,
-  "topK": 10
-}
-```
-
-#### 3. 查询任务进度
-```http
-GET /api/v1/wx-task-progress/<job_id>
-```
-
-### 模型可解释性接口
-
-#### 1. 获取模型架构
-```http
-GET /api/v1/model-architecture
-```
-
-#### 2. 获取模型计算图
-```http
-GET /api/v1/model-graph
-```
-
-#### 3. Integrated Gradients分析
-```http
-POST /api/v1/integrated-gradients
-Content-Type: application/json
-
-{
-  "rnaSequence": "ACGUACGUACGU...",
-  "targetClassId": 0
-}
-```
-
-#### 4. GCN聚合可视化
-```http
-POST /api/v1/visualize-gcn-aggregation
-Content-Type: application/json
-
-{
-  "rnaSequence": "ACGUACGUACGU...",
-  "targetNodeIdx": 10
-}
-```
-
-#### 5. 获取示例序列
-```http
-GET /api/v1/sample-sequence
-```
-返回工作区输入块的随机示例序列。
-
-### 模型对比与分析接口
-
-#### 1. 模型性能对比
-```http
-GET /api/v1/model-comparison
-```
-返回DCPRES、ModX、MultiRM三个模型的平均性能指标（Acc, AUC, AUPRC, Precision, Recall, F1, MCC, Sn, Sp）。
-
-#### 2. DCPRES分类热图
-```http
-GET /api/v1/rgcnformer-classification-heatmap
-```
-返回DCPRES模型12类×9指标的热力图数据。
-
-#### 3. DCPRES定位性能
-```http
-GET /api/v1/rgcnformer-localization
-```
-返回DCPRES定位性能数据（12类×7个Top-K值），用于甜甜圈图和统计表。
-
-#### 4. 定位模型对比
-```http
-GET /api/v1/rgcnformer-loc-comparison
-```
-返回DCPRES、ModX、MultiRM三个模型的定位性能对比（气泡图数据）。
-
-#### 5. UMAP可视化数据
-```http
-GET /api/v1/umap-data?n=1000
-```
-返回预计算的UMAP坐标和元数据，支持通过`n`参数进行下采样。
-
-## 模型架构
-
-### DCPRES_Model
-
-The model consists of three main components:
-
-1. **ParallelCNNBlock**
-   - Multi-scale convolution for local feature extraction
-   - Supports parallel convolution branches with different kernel sizes
-
-2. **GCNBlock**
-   - Graph convolutional network for RNA secondary structure processing
-   - Supports residual connections and layer normalization
-
-3. **ClassQueryHead**
-   - Attention-based class query head
-   - Supports hierarchical classification (12-class and 4-class)
-
-### Configuration Parameters
-
-```json
-{
-  "model": {
-    "cnn_hidden_dim": 64,
-    "cnn_kernel_sizes": [1, 3, 5, 7],
-    "cnn_dropout": 0.1,
-    "gcn_hidden_dim": 128,
-    "gcn_out_channels": 128,
-    "gcn_num_layers": 3,
-    "gcn_dropout": 0.3,
-    "num_classes": 12,
-    "num_attn_heads": 4,
-    "attn_dropout": 0.1,
-    "use_simple_pooling": false,
-    "use_hierarchical": true,
-    "use_layer_norm": true
-  }
-}
-```
-
-## Configuration
-
-Main configuration items are in `config.py`:
-
-- `FLASK_HOST`: Flask server address
-- `FLASK_PORT`: Flask server port
-- `FLASK_DEBUG`: Debug mode
-- `REDIS_HOST`: Redis server address
-- `REDIS_PORT`: Redis server port
-- `REDIS_DB`: Redis database number
-- `MODEL_DEVICE`: Model runtime device (cpu/cuda)
-- `MODEL_CHECKPOINT_PATH`: Model weight file path
-- `MODEL_CONFIG_PATH`: Model configuration file path
-- `MODEL_COMPARISON_CSV_DIR`: Model comparison CSV files directory
-- `MODEL_COMPARISON_FILES`: Model comparison file mapping (ModX, MultiRM, DCPRES)
-- `UMAP_DATA_PATH`: UMAP visualization data file path
-
-WeChat Mini Program configuration:
-
-- `WX_APPID`: WeChat Mini Program AppID
-- `WX_SECRET`: WeChat Mini Program AppSecret
-- `WX_LOGIN_URL`: WeChat login API URL
-
-## Deployment Guide
-
-### Production Deployment
-
-1. **Prepare Model Files**
-   - Place trained model weights in the specified directory
-   - Configure `MODEL_CHECKPOINT_PATH` to point to the weight file
-
-2. **Environment Variables**
-   ```bash
-   export FLASK_ENV=production
-   export FLASK_DEBUG=False
-   ```
-
-3. **Start with Gunicorn**
-   ```bash
-   gunicorn -w 4 -b 0.0.0.0:8000 --timeout 120 wsgi:app
-   ```
-
-4. **Nginx Reverse Proxy**
-   ```nginx
-   server {
-       listen 80;
-       server_name your-domain.com;
-       
-       location / {
-           proxy_pass http://127.0.0.1:8000;
-           proxy_set_header Host $host;
-           proxy_set_header X-Real-IP $remote_addr;
-       }
-   }
-   ```
-
-### Docker Production Deployment
+### 方式二:Docker 部署(生产模式) / Option 2: Docker Production
 
 ```bash
-# Build production image
-docker build -t dcpres-backend:latest .
-
-# Run container
-docker run -d \
-  --name dcpres-backend \
-  -p 8000:8000 \
-  -v /path/to/model:/app/model \
-  -e REDIS_HOST=redis \
-  --link redis:redis \
-  dcpres-backend:latest
+cd Cluster_WebAndWx_backend
+./run_docker.sh
+# 或手动:
+docker-compose up -d
 ```
 
-## Troubleshooting
+服务端口(默认):/ Ports (default):
+- Flask: 8000
+- Celery: 异步后台进程 / Celery: async background
+- Redis: 6379
 
-### Common Issues
+## 关键文件说明 / Key Files
 
-1. **Redis Connection Failed**
-   - Check if Redis service is running
-   - Confirm Redis address and port in configuration are correct
+| 文件 / File | 作用 / Purpose |
+|---|---|
+| `server.py` | Flask HTTP API 入口,提供 `/api/v1/submit-task`、`/api/v1/get-result`、`/api/v1/wx-login` 等路由;支持 IG、UMAP、注意力可视化接口 / Flask API entry with /api/v1/* routes, supports IG, UMAP, attention viz |
+| `main_model.py` | PyTorch 推理:加载 `epoch_040.pt`,运行 forward,返回 logits / 概率 / 注意力 / PyTorch inference: load weights, forward pass, return logits / probs / attention |
+| `main_model_onnx.py` | ONNX Runtime 推理(生产环境推荐,启动更快)/ ONNX inference (prod-recommended, faster startup) |
+| `common.py` | 公共常量(NUCLEOTIDE_MAP、k-mer 映射)、工具函数(softmax、序列编码) / Common constants, utilities (softmax, sequence encoding) |
+| `human.py` | Human RNA 数据处理:LinearFold 集成(`run_linearfold`)、二级结构构图(`build_edge_index_from_structure`)、`Mer100Dataset` / Human RNA data: LinearFold integration, structure-based graph construction |
+| `tasks.py` | Celery 异步任务:长时间推理任务(`run_prediction_task`),Redis 缓存结果 / Celery async tasks, Redis-cached results |
+| `tasks_docker.py` | Docker 环境下的 Celery 任务变体(REDIS_HOST 默认指向 docker 服务名 `redis`) / Docker-flavored Celery tasks |
+| `config.py` | 全局配置:模型路径、Redis 地址、LinearFold 路径、日志级别 / Global config: model path, Redis host, LinearFold path, log level |
+| `config_docker.py` | Docker 配置:`REDIS_HOST=redis`、容器内路径 / Docker config: `REDIS_HOST=redis`, container paths |
+| `wsgi.py` | WSGI 入口:Gunicorn 加载此文件 / WSGI entry loaded by Gunicorn |
+| `onnx.py` | PyTorch → ONNX → graph JSON 导出(供前端可视化)/ PyTorch → ONNX → graph JSON export |
+| `onnx2.py` | 第二种 ONNX 导出变体(`torch.jit.trace`)/ Second ONNX export variant |
+| `check.py` | LinearFold 边构建正确性诊断 / LinearFold edge construction diagnostic |
+| `check_speed.py` | CPU 推理速度基准(用于性能调优)/ CPU inference speed benchmark |
+| `test_cache.py` | Redis 缓存 + SHA256 jobId 一致性测试 / Redis cache + SHA256 jobId consistency test |
+| `epoch_040.pt` | 已训练模型权重 / Trained model weights |
 
-2. **Model Loading Failed**
-   - Check if model weight file path is correct
-   - Confirm PyTorch and PyG versions match
+## API 端点(简述) / API Endpoints (Summary)
 
-3. **Celery Tasks Not Executing**
-   - Confirm Celery Worker is running
-   - Check Celery log output
+| 方法 / Method | 路径 / Path | 作用 / Purpose |
+|---|---|---|
+| `POST` | `/api/v1/submit-task` | 提交单条推理任务 / Submit single inference task |
+| `POST` | `/api/v1/wx-submit-task` | 提交批量任务(微信端用)/ Submit batch task (WeChat) |
+| `GET`  | `/api/v1/get-result?jobId=xxx` | 同步查询任务结果 / Sync query task result |
+| `GET`  | `/api/v1/wx-get-result?jobId=xxx` | 微信端轮询 / WeChat polling |
+| `POST` | `/api/v1/wx-login` | 微信登录 / WeChat login |
+| `GET`  | `/api/v1/health` | 健康检查 / Health check |
+| `POST` | `/api/v1/ig` | Integrated Gradients 归因 / Integrated Gradients attribution |
+| `POST` | `/api/v1/umap` | UMAP 嵌入 / UMAP embedding |
 
-4. **LinearFold Compilation Failed**
-   - Ensure build-essential is installed
-   - Check if C++ compiler is available
+## 与其他项目的关系 / Relation to Other Projects
 
-## Contributing
+- **rgcnformer_sum** - 模型训练与导出,`epoch_040.pt` 与 ONNX 模型由本项目加载 / Model training & export; weights loaded by this project
+- **Cluster_WebAndWx_WxFrontend** - 微信前端,调用 `/api/v1/wx-*` 接口 / WeChat frontend calling /api/v1/wx-* endpoints
+- **RGCNFormer_WebAndWx_WebFrontend** - 网页前端,调用 `/api/v1/*` 接口 / Web frontend calling /api/v1/* endpoints
 
-Issues and Pull Requests are welcome!
+## 注意事项 / Notes
 
-1. Fork this repository
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+- **LinearFold** 为第三方 C++ 库,需要编译(见其 `src/` 中的构建说明);如无需二级结构可跳过 / LinearFold is 3rd-party C++; compile per its README or skip if structure not needed
+- 启动前确保 `epoch_040.pt` 与 `config.py` 中的 `MODEL_PATH` 一致 / Ensure `epoch_040.pt` matches `MODEL_PATH` in `config.py`
+- Celery 需要 Redis 7+ / Celery requires Redis 7+
+- 生产环境建议使用 ONNX 推理(`main_model_onnx.py`),启动比 PyTorch 快 ~5× / In prod, prefer ONNX runtime (5× faster startup)
 
-## License
+## 详细文档 / Detailed Documentation
 
-This project is licensed under the MIT License - see the LICENSE file for details
-
-## Contact
-
-- Project URL: https://github.com/fdiskdc/DCPRES_WebAndWx_backend
-- Issue Tracker: [GitHub Issues](https://github.com/fdiskdc/DCPRES_WebAndWx_backend/issues)
+每个 .py 文件的顶部已添加**中英双语**功能说明,包含输入/输出/数据流/相关文件。/ Each .py file has a **bilingual** header with inputs/outputs/data flow/related files.
