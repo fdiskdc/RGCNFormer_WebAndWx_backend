@@ -59,6 +59,7 @@ from celery.result import AsyncResult
 from main_model import RNA_ClassQuery_Model
 from human import run_linearfold, build_edge_index_from_structure
 from common import INDEX_TO_NUCLEOTIDE
+from attention_distribution import attention_distribution_cache_key
 from tasks import celery_app, run_prediction_task
 from config import config, get_logger
 
@@ -871,6 +872,38 @@ def get_model_architecture():
             "error": error_msg,
             "detail": str(e),
             "type": type(e).__name__
+        }), 500
+
+
+@app.route('/api/v1/results/<job_id>/attention-distribution', methods=['GET'])
+def get_cached_attention_distribution(job_id):
+    """Return the complete per-class attention distribution cached by a task."""
+    if not redis_client:
+        return jsonify({"error": "Redis not available"}), 503
+
+    try:
+        result_json = redis_client.get(attention_distribution_cache_key(job_id))
+        if not result_json:
+            return jsonify({
+                "error": "Attention distribution not found",
+                "message": "This task does not contain a cached attention distribution.",
+            }), 404
+
+        result = json.loads(result_json)
+        predicted_only = request.args.get("predictedOnly", "true").lower() != "false"
+        if predicted_only:
+            result["classes"] = [
+                class_data
+                for class_data in result.get("classes", [])
+                if class_data.get("is_predicted")
+            ]
+
+        return jsonify(result), 200
+    except Exception as e:
+        logger.error(f"Failed to retrieve attention distribution for {job_id}: {e}")
+        return jsonify({
+            "error": "Failed to retrieve attention distribution",
+            "detail": str(e),
         }), 500
 
 

@@ -48,6 +48,10 @@ from torch_geometric.data import Batch
 from main_model import RNA_ClassQuery_Model
 from human import run_linearfold, build_edge_index_from_structure, MOD_NAMES
 from common import INDEX_TO_NUCLEOTIDE
+from attention_distribution import (
+    attention_distribution_cache_key,
+    build_attention_distribution,
+)
 from config_docker import config, get_logger
 
 # ============================================================================
@@ -599,8 +603,33 @@ def run_prediction_task(self, original_sequence, target_class_id=None, top_k=Non
             "gcn": gcn_data
         }
 
-        # Store result in Redis cache
+        # Store full attention separately so normal task responses stay compact.
         if redis_client:
+            if attn_weights is not None:
+                try:
+                    attention_distribution = build_attention_distribution(
+                        original_sequence=original_sequence,
+                        attn_weights=attn_weights,
+                        probs_12class=probs_12class,
+                        predictions_12class=predictions_12class,
+                        thresholds_12class=thresholds_12class,
+                        class_names=[MOD_NAMES.get(i, f"Class{i}") for i in range(12)],
+                        left_padding=left_padding,
+                        left_trimming=left_trimming,
+                    )
+                    attention_distribution["job_id"] = job_id
+                    redis_client.setex(
+                        attention_distribution_cache_key(job_id),
+                        config.REDIS_CACHE_TTL,
+                        json.dumps(attention_distribution, ensure_ascii=False),
+                    )
+                except Exception as e:
+                    logger.error(
+                        f"Task {self.request.id}: Failed to cache attention distribution "
+                        f"for job_id {job_id}: {e}"
+                    )
+
+            # Store the existing compact task result independently.
             try:
                 # Serialize response to JSON
                 response_json = json.dumps(response, ensure_ascii=False)
