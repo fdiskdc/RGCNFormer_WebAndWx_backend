@@ -1,9 +1,9 @@
 """
 WSGI entry point for Gunicorn production server.
-
-This module exports the Flask application for use with Gunicorn.
 """
-from server import app
+from rgcnformer_backend.app import create_app
+
+app = create_app()
 
 if __name__ == "__main__":
     app.run()

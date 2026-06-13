@@ -2,13 +2,9 @@ import torch
 import json
 import os
 
-import sys
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
-# Import BOTH the original model and the ONNX-friendly version
-from main_model import RNA_ClassQuery_Model as OriginalModel
-from main_model_onnx import RNA_ClassQuery_Model as OnnxModel
-from config import config, get_logger
+from rgcnformer_backend.models.rgcnformer import RNA_ClassQuery_Model as OriginalModel
+from rgcnformer_backend.models.onnx_compatible import RNA_ClassQuery_Model as OnnxModel
+from rgcnformer_backend.core.config import config, get_logger
 
 logger = get_logger('graph_exporter')
 
@@ -49,7 +45,7 @@ def export_model_to_json():
     dummy_edge_index = torch.randint(0, seq_length, (2, num_edges), device=device)
     dummy_batch = torch.zeros(batch_size * seq_length, dtype=torch.long, device=device)
 
-    json_path = os.path.join(os.path.dirname(__file__), '..', 'model_graph.json')
+    json_path = os.path.join(os.path.dirname(__file__), '..', '..', 'model_graph.json')
 
     # --- 4. Trace model and extract graph structure ---
     logger.info("Tracing model to extract graph structure...")

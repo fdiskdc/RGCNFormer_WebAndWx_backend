@@ -3,12 +3,8 @@ import json
 import os
 import onnx as onnx
 
-# 确保可以从脚本目录正确导入项目模块
-import sys
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
-from main_model import RNA_ClassQuery_Model
-from config import config, get_logger
+from rgcnformer_backend.models.rgcnformer import RNA_ClassQuery_Model
+from rgcnformer_backend.core.config import config, get_logger
 
 logger = get_logger('graph_exporter')
 
@@ -47,8 +43,8 @@ def export_model_to_json():
     # So the dummy input will just be the x tensor, and others are passed as args
     dummy_input_for_export = dummy_x
 
-    onnx_path = os.path.join(os.path.dirname(__file__), '..', 'model.onnx')
-    json_path = os.path.join(os.path.dirname(__file__), '..', 'model_graph.json')
+    onnx_path = os.path.join(os.path.dirname(__file__), '..', '..', 'model.onnx')
+    json_path = os.path.join(os.path.dirname(__file__), '..', '..', 'model_graph.json')
 
     # --- 3. Export to ONNX ---
     logger.info(f"Exporting model to ONNX at: {onnx_path}")

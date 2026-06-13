@@ -47,12 +47,12 @@ RUN pip install --no-cache-dir -r requirements.txt
 # 5. 复制、编译 LinearFold、覆盖配置
 COPY . .
 RUN cd LinearFold && make
-RUN cp config_docker.py config.py && cp tasks_docker.py tasks.py
 
 # 9. 设置运行环境变量 (防止多进程死锁)
 ENV OMP_NUM_THREADS=1 
 ENV MKL_NUM_THREADS=1 
 ENV PYTHONUNBUFFERED=1 
+ENV REDIS_HOST=redis
 
 EXPOSE 8000
 
