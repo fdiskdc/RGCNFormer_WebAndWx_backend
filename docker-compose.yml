@@ -9,6 +9,7 @@ services:
       - "8000:8000"
     volumes:
       - .:/app  # 将当前目录映射到容器的 /app
+      - ${DATA_DIR:-./data}:/app/data  # 默认挂载项目目录下的 data，可通过 DATA_DIR 覆盖
     environment:
       - GUNICORN_WORKERS=${GUNICORN_WORKERS}
       - WX_APPID=${WX_APPID}
@@ -26,6 +27,7 @@ services:
     command: celery -A tasks_docker.celery_app worker --concurrency=1 --loglevel=info
     volumes:
       - .:/app
+      - ${DATA_DIR:-./data}:/app/data  # 与 backend 共享同一份宿主机数据
     environment:
       - CELERY_CONCURRENCY=${CELERY_CONCURRENCY}
       - REDIS_HOST=redis
