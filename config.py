@@ -77,7 +77,7 @@ class Config:
 
         # Server Configuration
         self.FLASK_HOST = os.getenv('FLASK_HOST', '0.0.0.0')
-        self.FLASK_PORT = int(os.getenv('FLASK_PORT', 8000))
+        self.FLASK_PORT = int(os.getenv('FLASK_PORT', 8001))
         self.FLASK_DEBUG = os.getenv('FLASK_DEBUG', 'False').lower() == 'true'
 
         # Logging Configuration
