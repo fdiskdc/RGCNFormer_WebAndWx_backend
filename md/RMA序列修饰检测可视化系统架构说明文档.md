@@ -54,7 +54,7 @@ RNA修饰（RNA Modification），又称RNA表观转录组修饰（Epitranscript
 
 随着高通量测序技术的快速发展和计算能力的显著提升，基于深度学习的计算方法成为大规模预测RNA修饰位点的重要手段[3]。深度学习方法能够从大规模序列数据中自动学习特征表示，避免了传统机器学习方法中繁琐的人工特征工程。
 
-本项目基于深度学习技术，提出了DCPRES（Dual-Channel Pattern Recognition with Enhanced Structure，双通道模式识别增强结构）模型，用于RNA序列修饰位点的精准预测。该模型基于RGCNFormer（Relational Graph Convolutional Network Transformer，关系图卷积网络Transformer）基础架构，创新性地融合了三种互补的深度学习技术，形成了多尺度、多层次的特征提取框架。在局部特征提取层面，模型采用多尺度卷积神经网络（Multi-scale CNN），通过kernel_size分别为1、3、5、7的四种卷积核并行提取不同粒度的序列模式，分别捕获单碱基特征、3-mer基序、5-mer基序和7-mer基序，实现从单碱基到局部序列模式的多层次特征提取。在空间结构建模层面，模型引入图卷积网络（Graph Convolutional Network, GCN），通过将RNA二级结构中的碱基配对关系建模为图结构，利用图卷积的邻域聚合机制捕获序列的空间拓扑信息，实现序列特征与结构特征的深度融合。在全局分类决策层面，模型设计了Transformer类查询注意力机制（Class-Query Attention），定义12个可学习的类查询向量，通过多头注意力计算与节点特征进行交互，实现对12类修饰类型的精准分类。
+* 本项目基于深度学习技术，提出了DCPRES（Dual-Channel Pattern Recognition with Enhanced Structure，双通道模式识别增强结构）模型，用于RNA序列修饰位点的精准预测。该模型基于RGCNFormer（Relational Graph Convolutional Network Transformer，关系图卷积网络Transformer）基础架构，创新性地融合了三种互补的深度学习技术，形成了多尺度、多层次的特征提取框架。在局部特征提取层面，模型采用多尺度卷积神经网络（Multi-scale CNN），通过kernel_size分别为1、3、5、7的四种卷积核并行提取不同粒度的序列模式，分别捕获单碱基特征、3-mer基序、5-mer基序和7-mer基序，实现从单碱基到局部序列模式的多层次特征提取。在空间结构建模层面，模型引入图卷积网络（Graph Convolutional Network, GCN），通过将RNA二级结构中的碱基配对关系建模为图结构，利用图卷积的邻域聚合机制捕获序列的空间拓扑信息，实现序列特征与结构特征的深度融合。在全局分类决策层面，模型设计了Transformer类查询注意力机制（Class-Query Attention），定义12个可学习的类查询向量，通过多头注意力计算与节点特征进行交互，实现对12类修饰类型的精准分类。
 
 特别是在少样本（few-shot）和零样本（zero-shot）学习场景下，DCPRES展现出优异的泛化能力，为低资源修饰类型（如ac4C、Am等）的预测提供了新的技术方案，具有重要的研究价值和应用前景。
 
@@ -106,20 +106,21 @@ Transformer架构自2017年由Vaswani等人提出以来[5]，在自然语言处�
 
 **表1 系统可视化组件列表**
 
-| 编号 | 组件名称 | 功能描述 | 可视化类型 | 数据接口 |
-|------|---------|---------|-----------|---------|
-| 1 | ClassificationViz | 12类修饰概率展示 | 柱状图/雷达图 | `/api/v1/results/:jobId` |
-| 2 | LocalizationViz | 修饰位点在序列上的分布 | 序列标注图 | `/api/v1/results/:jobId` |
-| 3 | AttentionViz | 多头注意力权重热力图 | 热力图 | `/api/v1/results/:jobId` |
-| 4 | AttentionComparisonViz | 不同修饰类型注意力对比 | 对比热力图 | `/api/v1/results/:jobId` |
-| 5 | AttentionDistributionViz | 注意力权重统计分布 | 分布图 | `/api/v1/results/:jobId` |
-| 6 | GcnViz | RNA二级结构图可视化 | 力导向图 | `/api/v1/results/:jobId` |
-| 7 | TargetGcnViz | 特定节点的GCN消息传递 | 流程图 | `/api/v1/visualize-gcn-aggregation` |
-| 8 | IntegratedGradientsViz | 碱基级积分梯度归因分析 | 归因图 | `/api/v1/integrated-gradients` |
-| 9 | UMapViz | 高维特征UMAP降维可视化 | 散点图 | `/api/v1/umap` |
-| 10 | ModelViz | 层次化模型架构展示 | 结构图 | `/api/v1/model-architecture` |
-| 11 | RgcnformerHeatmap | 修饰位点热力图 | 热力图 | `/api/v1/results/:jobId` |
-| 12 | DatasetComparisonHeatmap | 数据集对比热力图 | 对比热力图 | `/api/v1/model-comparison` |
+
+| 编号 | 组件名称                 | 功能描述               | 可视化类型    | 数据接口                            |
+| ---- | ------------------------ | ---------------------- | ------------- | ----------------------------------- |
+| 1    | ClassificationViz        | 12类修饰概率展示       | 柱状图/雷达图 | `/api/v1/results/:jobId`            |
+| 2    | LocalizationViz          | 修饰位点在序列上的分布 | 序列标注图    | `/api/v1/results/:jobId`            |
+| 3    | AttentionViz             | 多头注意力权重热力图   | 热力图        | `/api/v1/results/:jobId`            |
+| 4    | AttentionComparisonViz   | 不同修饰类型注意力对比 | 对比热力图    | `/api/v1/results/:jobId`            |
+| 5    | AttentionDistributionViz | 注意力权重统计分布     | 分布图        | `/api/v1/results/:jobId`            |
+| 6    | GcnViz                   | RNA二级结构图可视化    | 力导向图      | `/api/v1/results/:jobId`            |
+| 7    | TargetGcnViz             | 特定节点的GCN消息传递  | 流程图        | `/api/v1/visualize-gcn-aggregation` |
+| 8    | IntegratedGradientsViz   | 碱基级积分梯度归因分析 | 归因图        | `/api/v1/integrated-gradients`      |
+| 9    | UMapViz                  | 高维特征UMAP降维可视化 | 散点图        | `/api/v1/umap`                      |
+| 10   | ModelViz                 | 层次化模型架构展示     | 结构图        | `/api/v1/model-architecture`        |
+| 11   | RgcnformerHeatmap        | 修饰位点热力图         | 热力图        | `/api/v1/results/:jobId`            |
+| 12   | DatasetComparisonHeatmap | 数据集对比热力图       | 对比热力图    | `/api/v1/model-comparison`          |
 
 此外，ComparePage组件支持多模型性能指标的对比分析，包括准确率（Accuracy）、精确率（Precision）、召回率（Recall）、F1分数（F1-Score）和AUC-ROC等评估指标，帮助研究人员全面评估不同模型的预测性能。
 
@@ -221,39 +222,42 @@ graph LR
 
 **用例1：提交RNA序列进行预测**
 
-| 项目 | 描述 |
-|------|------|
-| 用例名称 | 提交RNA序列进行预测 |
-| 用例编号 | UC-001 |
-| 参与者 | 研究人员 |
-| 前置条件 | 用户已打开系统工作台页面 |
-| 基本流 | 1. 用户进入工作台页面（WorkspacePage）；2. 在文本框中输入RNA序列字符串，或上传FASTA格式文件；3. 系统自动验证序列格式（仅包含A/C/G/U/T/N字符，长度≥51nt）；4. 用户可选择目标修饰类型（可选）和Top-K参数（可选）；5. 用户点击"提交"按钮；6. 系统计算SHA256哈希作为任务ID；7. 系统检查Redis缓存，若命中则直接返回结果，否则提交Celery异步任务；8. 系统返回任务ID和预测状态 |
-| 备选流 | a. 序列格式错误：系统提示"序列格式不正确，请检查输入"，高亮显示非法字符；b. 服务器繁忙：系统提示"服务器繁忙，请稍后重试"；c. 序列长度不足：系统提示"序列长度不足51nt" |
-| 后置条件 | 预测任务已创建，用户可查询预测结果 |
+
+| 项目     | 描述                                                                                                                                                                                                                                                                                                                                                                     |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 用例名称 | 提交RNA序列进行预测                                                                                                                                                                                                                                                                                                                                                      |
+| 用例编号 | UC-001                                                                                                                                                                                                                                                                                                                                                                   |
+| 参与者   | 研究人员                                                                                                                                                                                                                                                                                                                                                                 |
+| 前置条件 | 用户已打开系统工作台页面                                                                                                                                                                                                                                                                                                                                                 |
+| 基本流   | 1. 用户进入工作台页面（WorkspacePage）；2. 在文本框中输入RNA序列字符串，或上传FASTA格式文件；3. 系统自动验证序列格式（仅包含A/C/G/U/T/N字符，长度≥51nt）；4. 用户可选择目标修饰类型（可选）和Top-K参数（可选）；5. 用户点击"提交"按钮；6. 系统计算SHA256哈希作为任务ID；7. 系统检查Redis缓存，若命中则直接返回结果，否则提交Celery异步任务；8. 系统返回任务ID和预测状态 |
+| 备选流   | a. 序列格式错误：系统提示"序列格式不正确，请检查输入"，高亮显示非法字符；b. 服务器繁忙：系统提示"服务器繁忙，请稍后重试"；c. 序列长度不足：系统提示"序列长度不足51nt"                                                                                                                                                                                                    |
+| 后置条件 | 预测任务已创建，用户可查询预测结果                                                                                                                                                                                                                                                                                                                                       |
 
 **用例2：查看12类修饰分类结果**
 
-| 项目 | 描述 |
-|------|------|
-| 用例名称 | 查看12类修饰分类结果 |
-| 用例编号 | UC-002 |
-| 参与者 | 研究人员 |
-| 前置条件 | 预测任务已完成（状态为completed） |
-| 基本流 | 1. 用户进入结果页面（ResultsPage）；2. 系统从Redis缓存中获取预测结果；3. 系统以柱状图展示12类修饰的预测概率；4. 用户可悬停查看详细数值；5. 用户可点击查看特定修饰类型的详细分析；6. 支持结果导出为CSV/JSON格式 |
-| 备选流 | a. 任务未完成：系统显示进度条和当前状态；b. 任务失败：系统显示错误信息和重试按钮 |
-| 后置条件 | 用户已查看分类结果 |
+
+| 项目     | 描述                                                                                                                                                                                                           |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 用例名称 | 查看12类修饰分类结果                                                                                                                                                                                           |
+| 用例编号 | UC-002                                                                                                                                                                                                         |
+| 参与者   | 研究人员                                                                                                                                                                                                       |
+| 前置条件 | 预测任务已完成（状态为completed）                                                                                                                                                                              |
+| 基本流   | 1. 用户进入结果页面（ResultsPage）；2. 系统从Redis缓存中获取预测结果；3. 系统以柱状图展示12类修饰的预测概率；4. 用户可悬停查看详细数值；5. 用户可点击查看特定修饰类型的详细分析；6. 支持结果导出为CSV/JSON格式 |
+| 备选流   | a. 任务未完成：系统显示进度条和当前状态；b. 任务失败：系统显示错误信息和重试按钮                                                                                                                               |
+| 后置条件 | 用户已查看分类结果                                                                                                                                                                                             |
 
 **用例3：进行IG归因分析**
 
-| 项目 | 描述 |
-|------|------|
-| 用例名称 | 进行Integrated Gradients归因分析 |
-| 用例编号 | UC-003 |
-| 参与者 | 研究人员 |
-| 前置条件 | 用户已提交RNA序列 |
-| 基本流 | 1. 用户进入IG归因可视化页面；2. 用户选择目标修饰类型（targetClassId）；3. 系统调用Captum库计算积分梯度；4. 系统以归因图展示每个碱基位点的贡献值；5. 高亮显示贡献最大的碱基位点；6. 用户可交互探索不同区域的归因值 |
-| 备选流 | a. 计算超时：系统提示"归因计算耗时较长，请耐心等待" |
-| 后置条件 | 用户已查看归因分析结果 |
+
+| 项目     | 描述                                                                                                                                                                                                              |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 用例名称 | 进行Integrated Gradients归因分析                                                                                                                                                                                  |
+| 用例编号 | UC-003                                                                                                                                                                                                            |
+| 参与者   | 研究人员                                                                                                                                                                                                          |
+| 前置条件 | 用户已提交RNA序列                                                                                                                                                                                                 |
+| 基本流   | 1. 用户进入IG归因可视化页面；2. 用户选择目标修饰类型（targetClassId）；3. 系统调用Captum库计算积分梯度；4. 系统以归因图展示每个碱基位点的贡献值；5. 高亮显示贡献最大的碱基位点；6. 用户可交互探索不同区域的归因值 |
+| 备选流   | a. 计算超时：系统提示"归因计算耗时较长，请耐心等待"                                                                                                                                                               |
+| 后置条件 | 用户已查看归因分析结果                                                                                                                                                                                            |
 
 ---
 
@@ -326,27 +330,28 @@ graph TB
 
 **表2 系统技术选型表**
 
-| 层次 | 技术选型 | 版本 | 选型说明 |
-|------|---------|------|---------|
-| Web前端框架 | React + TypeScript | 19.x / 5.9 | 组件化开发，类型安全，生态丰富，社区活跃 |
-| 构建工具 | Vite | 7.x | 基于ESM的快速热更新，开发体验优秀 |
-| UI组件库 | Ant Design | 6.x | 企业级UI组件库，设计规范统一，组件丰富 |
-| 图表库 | ECharts | 6.x | 百度开源统计图表库，图表类型丰富，交互性强 |
-| 图可视化 | AntV G6 + ReactFlow | 5.x / 11.x | 蚂蚁集团图可视化引擎+流程图组件，专业级图结构展示 |
-| 3D渲染 | Three.js | 0.182 | WebGL三维渲染引擎，支持三维分子结构可视化 |
-| 关系图 | D3.js + react-force-graph | 7.x | 数据驱动文档+力导向图组件，灵活的自定义可视化 |
-| 数据请求 | TanStack React Query | 5.x | 服务端状态管理，自动缓存、轮询、错误重试 |
-| 国际化 | 自定义LanguageContext | — | 轻量级i18n方案，支持中英文动态切换 |
-| 微信前端 | 原生小程序 | glass-easel | 微信官方组件框架，轻量原生，性能最优 |
-| 后端框架 | Flask + Flask-CORS | 2.x | Python轻量Web框架，灵活易扩展 |
-| WSGI服务器 | Gunicorn | 20.x | 生产级Python WSGI HTTP服务器 |
-| 异步任务 | Celery | 5.x | Python分布式任务队列，成熟稳定 |
-| 消息代理 | Redis | 7+ | 高性能内存数据库，缓存+消息代理+会话存储 |
-| 深度学习 | PyTorch + PyG | 1.10+ / 2.0+ | 动态计算图机制，PyTorch Geometric图神经网络支持 |
-| 推理引擎 | ONNX Runtime | — | 微软开源跨平台推理加速引擎 |
-| 结构预测 | LinearFold | C++ | 线性时间复杂度RNA二级结构预测算法 |
-| 模型可解释 | Captum (IG) | 0.4+ | Facebook开源模型可解释性库，积分梯度归因分析 |
-| 容器化 | Docker + docker-compose | — | 容器化部署，服务编排，环境一致性 |
+
+| 层次        | 技术选型                  | 版本         | 选型说明                                          |
+| ----------- | ------------------------- | ------------ | ------------------------------------------------- |
+| Web前端框架 | React + TypeScript        | 19.x / 5.9   | 组件化开发，类型安全，生态丰富，社区活跃          |
+| 构建工具    | Vite                      | 7.x          | 基于ESM的快速热更新，开发体验优秀                 |
+| UI组件库    | Ant Design                | 6.x          | 企业级UI组件库，设计规范统一，组件丰富            |
+| 图表库      | ECharts                   | 6.x          | 百度开源统计图表库，图表类型丰富，交互性强        |
+| 图可视化    | AntV G6 + ReactFlow       | 5.x / 11.x   | 蚂蚁集团图可视化引擎+流程图组件，专业级图结构展示 |
+| 3D渲染      | Three.js                  | 0.182        | WebGL三维渲染引擎，支持三维分子结构可视化         |
+| 关系图      | D3.js + react-force-graph | 7.x          | 数据驱动文档+力导向图组件，灵活的自定义可视化     |
+| 数据请求    | TanStack React Query      | 5.x          | 服务端状态管理，自动缓存、轮询、错误重试          |
+| 国际化      | 自定义LanguageContext     | —           | 轻量级i18n方案，支持中英文动态切换                |
+| 微信前端    | 原生小程序                | glass-easel  | 微信官方组件框架，轻量原生，性能最优              |
+| 后端框架    | Flask + Flask-CORS        | 2.x          | Python轻量Web框架，灵活易扩展                     |
+| WSGI服务器  | Gunicorn                  | 20.x         | 生产级Python WSGI HTTP服务器                      |
+| 异步任务    | Celery                    | 5.x          | Python分布式任务队列，成熟稳定                    |
+| 消息代理    | Redis                     | 7+           | 高性能内存数据库，缓存+消息代理+会话存储          |
+| 深度学习    | PyTorch + PyG             | 1.10+ / 2.0+ | 动态计算图机制，PyTorch Geometric图神经网络支持   |
+| 推理引擎    | ONNX Runtime              | —           | 微软开源跨平台推理加速引擎                        |
+| 结构预测    | LinearFold                | C++          | 线性时间复杂度RNA二级结构预测算法                 |
+| 模型可解释  | Captum (IG)               | 0.4+         | Facebook开源模型可解释性库，积分梯度归因分析      |
+| 容器化      | Docker + docker-compose   | —           | 容器化部署，服务编排，环境一致性                  |
 
 ### 2.3 系统模块划分
 
@@ -613,19 +618,20 @@ graph TD
 
 **表3 前端路由表**
 
-| 路径 | 页面组件 | 布局 | 功能描述 |
-|------|---------|------|---------|
-| `/` | WorkspacePage | 独立布局 | 系统主入口，RNA序列输入与提交 |
-| `/legacy` | MainPage | 独立布局 | 兼容旧版入口，系统功能导航 |
-| `/results/:jobId` | ResultsPage | 独立布局 | 预测结果总览，任务状态轮询 |
-| `/viz-display` | VizDisplayPage | 独立布局 | 可视化展示容器 |
-| `/classification` | ClassificationViz | VizLayout | 12类修饰分类概率展示 |
-| `/attention` | AttentionViz | VizLayout | 多头注意力权重热力图 |
-| `/gcn` | GcnViz | VizLayout | RNA二级结构图可视化 |
-| `/target-gcn` | TargetGcnViz | VizLayout | 特定节点GCN消息传递 |
-| `/integrated-gradients` | IntegratedGradientsViz | VizLayout | 积分梯度归因分析 |
-| `/model-viz` | ModelViz | VizLayout | 层次化模型架构展示 |
-| `/compare` | ComparePage | 独立布局 | 多模型性能对比 |
+
+| 路径                    | 页面组件               | 布局      | 功能描述                      |
+| ----------------------- | ---------------------- | --------- | ----------------------------- |
+| `/`                     | WorkspacePage          | 独立布局  | 系统主入口，RNA序列输入与提交 |
+| `/legacy`               | MainPage               | 独立布局  | 兼容旧版入口，系统功能导航    |
+| `/results/:jobId`       | ResultsPage            | 独立布局  | 预测结果总览，任务状态轮询    |
+| `/viz-display`          | VizDisplayPage         | 独立布局  | 可视化展示容器                |
+| `/classification`       | ClassificationViz      | VizLayout | 12类修饰分类概率展示          |
+| `/attention`            | AttentionViz           | VizLayout | 多头注意力权重热力图          |
+| `/gcn`                  | GcnViz                 | VizLayout | RNA二级结构图可视化           |
+| `/target-gcn`           | TargetGcnViz           | VizLayout | 特定节点GCN消息传递           |
+| `/integrated-gradients` | IntegratedGradientsViz | VizLayout | 积分梯度归因分析              |
+| `/model-viz`            | ModelViz               | VizLayout | 层次化模型架构展示            |
+| `/compare`              | ComparePage            | 独立布局  | 多模型性能对比                |
 
 **路由设计说明**：
 
@@ -669,20 +675,21 @@ stateDiagram-v2
 
 **表4 可视化组件数据源与交互设计表**
 
-| 组件 | 数据源接口 | 可视化库 | 交互方式 | 主要功能 |
-|------|-----------|---------|---------|---------|
-| ClassificationViz | `/api/v1/results/:jobId` | ECharts | 悬停查看详情，点击展开 | 12类修饰概率柱状图/雷达图 |
-| LocalizationViz | `/api/v1/results/:jobId` | ECharts | 位点点击高亮 | 修饰位点在序列上的分布标注 |
-| AttentionViz | `/api/v1/results/:jobId` | ECharts | 热力图缩放、拖拽 | 多头注意力权重热力图展示 |
-| AttentionComparisonViz | `/api/v1/results/:jobId` | ECharts | 对比切换 | 不同修饰类型注意力对比 |
-| AttentionDistributionViz | `/api/v1/results/:jobId` | ECharts | 分布参数调节 | 注意力权重统计分布图 |
-| GcnViz | `/api/v1/results/:jobId` | AntV G6 | 节点拖拽、缩放、悬停 | RNA二级结构力导向图 |
-| TargetGcnViz | `/api/v1/visualize-gcn-aggregation` | ReactFlow | 节点选择、展开 | GCN邻域聚合消息传递流程 |
-| IntegratedGradientsViz | `/api/v1/integrated-gradients` | D3.js + G6 | 归因值探索、区域选择 | 碱基级积分梯度归因分析 |
-| UMapViz | `/api/v1/umap` | ECharts | 散点缩放、区域框选 | UMAP降维散点图 |
-| ModelViz | `/api/v1/model-architecture` | ReactFlow | 层次展开、节点详情 | DCPRES层次化架构图 |
-| RgcnformerHeatmap | `/api/v1/results/:jobId` | ECharts | 热力图缩放 | 修饰位点预测热力图 |
-| LocComparisonViz | `/api/v1/results/:jobId` | ECharts | 位点对比切换 | 不同修饰位点预测对比 |
+
+| 组件                     | 数据源接口                          | 可视化库   | 交互方式               | 主要功能                   |
+| ------------------------ | ----------------------------------- | ---------- | ---------------------- | -------------------------- |
+| ClassificationViz        | `/api/v1/results/:jobId`            | ECharts    | 悬停查看详情，点击展开 | 12类修饰概率柱状图/雷达图  |
+| LocalizationViz          | `/api/v1/results/:jobId`            | ECharts    | 位点点击高亮           | 修饰位点在序列上的分布标注 |
+| AttentionViz             | `/api/v1/results/:jobId`            | ECharts    | 热力图缩放、拖拽       | 多头注意力权重热力图展示   |
+| AttentionComparisonViz   | `/api/v1/results/:jobId`            | ECharts    | 对比切换               | 不同修饰类型注意力对比     |
+| AttentionDistributionViz | `/api/v1/results/:jobId`            | ECharts    | 分布参数调节           | 注意力权重统计分布图       |
+| GcnViz                   | `/api/v1/results/:jobId`            | AntV G6    | 节点拖拽、缩放、悬停   | RNA二级结构力导向图        |
+| TargetGcnViz             | `/api/v1/visualize-gcn-aggregation` | ReactFlow  | 节点选择、展开         | GCN邻域聚合消息传递流程    |
+| IntegratedGradientsViz   | `/api/v1/integrated-gradients`      | D3.js + G6 | 归因值探索、区域选择   | 碱基级积分梯度归因分析     |
+| UMapViz                  | `/api/v1/umap`                      | ECharts    | 散点缩放、区域框选     | UMAP降维散点图             |
+| ModelViz                 | `/api/v1/model-architecture`        | ReactFlow  | 层次展开、节点详情     | DCPRES层次化架构图         |
+| RgcnformerHeatmap        | `/api/v1/results/:jobId`            | ECharts    | 热力图缩放             | 修饰位点预测热力图         |
+| LocComparisonViz         | `/api/v1/results/:jobId`            | ECharts    | 位点对比切换           | 不同修饰位点预测对比       |
 
 **可视化组件交互设计详细说明**：
 
@@ -700,12 +707,13 @@ stateDiagram-v2
 
 **表5 微信小程序页面结构**
 
-| 页面 | 路径 | 功能描述 | 核心组件 |
-|------|------|---------|---------|
-| 首页 | `pages/index/index` | RNA序列输入，支持最多5条批量提交 | 序列输入框、提交按钮、登录按钮 |
-| 结果页 | `pages/results/results` | 12类修饰预测结果展示 | 分类结果列表、注意力权重条 |
-| 网页容器 | `pages/webview/index` | 内嵌web-view，跳转Web端查看3D可视化 | native web-view组件 |
-| 日志页 | `pages/logs/logs` | 微信小程序日志查看 | 日志列表 |
+
+| 页面     | 路径                    | 功能描述                            | 核心组件                       |
+| -------- | ----------------------- | ----------------------------------- | ------------------------------ |
+| 首页     | `pages/index/index`     | RNA序列输入，支持最多5条批量提交    | 序列输入框、提交按钮、登录按钮 |
+| 结果页   | `pages/results/results` | 12类修饰预测结果展示                | 分类结果列表、注意力权重条     |
+| 网页容器 | `pages/webview/index`   | 内嵌web-view，跳转Web端查看3D可视化 | native web-view组件            |
+| 日志页   | `pages/logs/logs`       | 微信小程序日志查看                  | 日志列表                       |
 
 **小程序数据流**：
 
@@ -717,19 +725,20 @@ stateDiagram-v2
 
 **表6 小程序端与Web端功能对比**
 
-| 功能模块 | 小程序端 | Web端 | 差异说明 |
-|---------|---------|-------|---------|
-| 序列输入 | 支持（最多5条） | 支持（无限制） | 小程序端限制批量数以控制资源消耗 |
-| 批量提交 | 支持 | 支持 | 两者均支持异步批量推理 |
-| 预测进度 | 轮询查看（2秒间隔） | React Query自动轮询 | 轮询机制不同 |
-| 分类结果 | 支持（列表展示） | 支持（图表展示） | Web端图表更丰富 |
-| 注意力可视化 | 不支持 | 支持（ECharts热力图） | 小程序端跳转Web端查看 |
-| GCN图可视化 | 不支持 | 支持（AntV G6力导向图） | 小程序端跳转Web端查看 |
-| UMAP可视化 | 不支持 | 支持（ECharts散点图） | 小程序端跳转Web端查看 |
-| IG归因分析 | 不支持 | 支持（D3.js归因图） | 小程序端跳转Web端查看 |
-| 模型对比 | 不支持 | 支持（ComparePage） | 小程序端跳转Web端查看 |
-| 国际化 | 不支持 | 支持（中英文） | 小程序端仅中文 |
-| 3D可视化 | 通过web-view跳转 | 原生支持（Three.js） | 小程序端依赖Web端 |
+
+| 功能模块     | 小程序端            | Web端                   | 差异说明                         |
+| ------------ | ------------------- | ----------------------- | -------------------------------- |
+| 序列输入     | 支持（最多5条）     | 支持（无限制）          | 小程序端限制批量数以控制资源消耗 |
+| 批量提交     | 支持                | 支持                    | 两者均支持异步批量推理           |
+| 预测进度     | 轮询查看（2秒间隔） | React Query自动轮询     | 轮询机制不同                     |
+| 分类结果     | 支持（列表展示）    | 支持（图表展示）        | Web端图表更丰富                  |
+| 注意力可视化 | 不支持              | 支持（ECharts热力图）   | 小程序端跳转Web端查看            |
+| GCN图可视化  | 不支持              | 支持（AntV G6力导向图） | 小程序端跳转Web端查看            |
+| UMAP可视化   | 不支持              | 支持（ECharts散点图）   | 小程序端跳转Web端查看            |
+| IG归因分析   | 不支持              | 支持（D3.js归因图）     | 小程序端跳转Web端查看            |
+| 模型对比     | 不支持              | 支持（ComparePage）     | 小程序端跳转Web端查看            |
+| 国际化       | 不支持              | 支持（中英文）          | 小程序端仅中文                   |
+| 3D可视化     | 通过web-view跳转    | 原生支持（Three.js）    | 小程序端依赖Web端                |
 
 小程序端定位为**轻量级查询工具**，核心功能为序列提交、进度监控和结果查看；复杂可视化功能通过内嵌web-view组件跳转到Web端实现。
 
@@ -743,20 +752,21 @@ stateDiagram-v2
 
 **表7 核心API端点清单**
 
-| 编号 | 接口名称 | 方法 | 路径 | 请求参数 | 响应格式 | 说明 |
-|------|---------|------|------|---------|---------|------|
-| 1 | 提交任务 | POST | `/api/v1/submit-task` | `{rnaSequence, targetClassId?, topK?}` | `{jobId, status}` | 单条异步推理，SHA256缓存键 |
-| 2 | 批量提交 | POST | `/api/v1/wx-submit-task` | `{sequences: [seq1..seq5]}` | `{batch_job_id}` | 微信端批量，UUID标识 |
-| 3 | 查询结果 | GET | `/api/v1/results/:jobId` | — | 完整结果JSON | 轮询获取，支持中间状态 |
-| 4 | 批量进度 | GET | `/api/v1/wx-task-progress/:jobId` | — | `{status, progress, results}` | 微信端进度查询 |
-| 5 | IG归因 | POST | `/api/v1/integrated-gradients` | `{rnaSequence, targetClassId}` | `{attributions, nodes, edges}` | Captum积分梯度计算 |
-| 6 | GCN聚合 | POST | `/api/v1/visualize-gcn-aggregation` | `{rnaSequence, targetNodeIdx}` | `{nodes, edges, aggregationData}` | GCN消息传递可视化 |
-| 7 | 模型架构 | GET | `/api/v1/model-architecture` | — | 层次化JSON树 | PyTorch模型结构 |
-| 8 | 模型计算图 | GET | `/api/v1/model-graph` | — | `{nodes, edges}` | ONNX计算图数据 |
-| 9 | 模型对比 | GET | `/api/v1/model-comparison` | — | `{models, metrics}` | 多模型性能对比 |
-| 10 | UMAP降维 | GET | `/api/v1/umap` | — | `{points, labels}` | 预计算UMAP嵌入 |
-| 11 | 示例序列 | GET | `/api/v1/sample-sequence` | — | `{sequence, name}` | 随机RNA示例序列 |
-| 12 | 健康检查 | GET | `/api/health` | — | `{status, model_loaded, device}` | 系统健康状态 |
+
+| 编号 | 接口名称   | 方法 | 路径                                | 请求参数                               | 响应格式                          | 说明                       |
+| ---- | ---------- | ---- | ----------------------------------- | -------------------------------------- | --------------------------------- | -------------------------- |
+| 1    | 提交任务   | POST | `/api/v1/submit-task`               | `{rnaSequence, targetClassId?, topK?}` | `{jobId, status}`                 | 单条异步推理，SHA256缓存键 |
+| 2    | 批量提交   | POST | `/api/v1/wx-submit-task`            | `{sequences: [seq1..seq5]}`            | `{batch_job_id}`                  | 微信端批量，UUID标识       |
+| 3    | 查询结果   | GET  | `/api/v1/results/:jobId`            | —                                     | 完整结果JSON                      | 轮询获取，支持中间状态     |
+| 4    | 批量进度   | GET  | `/api/v1/wx-task-progress/:jobId`   | —                                     | `{status, progress, results}`     | 微信端进度查询             |
+| 5    | IG归因     | POST | `/api/v1/integrated-gradients`      | `{rnaSequence, targetClassId}`         | `{attributions, nodes, edges}`    | Captum积分梯度计算         |
+| 6    | GCN聚合    | POST | `/api/v1/visualize-gcn-aggregation` | `{rnaSequence, targetNodeIdx}`         | `{nodes, edges, aggregationData}` | GCN消息传递可视化          |
+| 7    | 模型架构   | GET  | `/api/v1/model-architecture`        | —                                     | 层次化JSON树                      | PyTorch模型结构            |
+| 8    | 模型计算图 | GET  | `/api/v1/model-graph`               | —                                     | `{nodes, edges}`                  | ONNX计算图数据             |
+| 9    | 模型对比   | GET  | `/api/v1/model-comparison`          | —                                     | `{models, metrics}`               | 多模型性能对比             |
+| 10   | UMAP降维   | GET  | `/api/v1/umap`                      | —                                     | `{points, labels}`                | 预计算UMAP嵌入             |
+| 11   | 示例序列   | GET  | `/api/v1/sample-sequence`           | —                                     | `{sequence, name}`                | 随机RNA示例序列            |
+| 12   | 健康检查   | GET  | `/api/health`                       | —                                     | `{status, model_loaded, device}`  | 系统健康状态               |
 
 ##### 3.2.1.2 接口详细说明
 
@@ -765,11 +775,13 @@ stateDiagram-v2
 这是系统最核心的接口，负责接收用户的RNA序列预测请求。接口处理流程如下：
 
 请求参数：
+
 - `rnaSequence`（必填，string）：RNA序列字符串，仅包含A、C、G、U、T、N字符，长度≥51nt；
 - `targetClassId`（可选，int）：目标修饰类型ID（0~11），用于特定修饰的归因分析；
 - `topK`（可选，int）：返回Top-K预测结果，默认为12。
 
 响应格式：
+
 ```json
 {
   "jobId": "a1b2c3d4e5f6...",
@@ -782,6 +794,7 @@ stateDiagram-v2
 **2. 查询结果接口（GET /api/v1/results/:jobId）**
 
 响应格式（任务完成时）：
+
 ```json
 {
   "status": "completed",
@@ -803,6 +816,7 @@ stateDiagram-v2
 **3. 健康检查接口（GET /api/health）**
 
 响应格式：
+
 ```json
 {
   "status": "healthy",
@@ -840,7 +854,7 @@ sequenceDiagram
     else 缓存未命中
         Flask->>Celery: apply_async(run_prediction_task)
         Flask-->>前端: 202 Accepted {jobId, status: "pending"}
-        
+    
         Note over 前端: 前端开始轮询
 
         loop 每2秒轮询
@@ -940,7 +954,9 @@ ParallelCNNBlock采用多尺度并行卷积策略，使用kernel_size分别为1�
 
 GCNBlock基于RNA二级结构信息进行图卷积计算，通过3层GCNConv层逐步融合图结构信息。每层GCNConv的计算过程如下：
 
-$$h_i^{(l+1)} = \sigma\left(\sum_{j \in \mathcal{N}(i)} \frac{1}{c_{ij}} W^{(l)} h_j^{(l)} + b^{(l)}\right)$$
+$$
+h_i^{(l+1)} = \sigma\left(\sum_{j \in \mathcal{N}(i)} \frac{1}{c_{ij}} W^{(l)} h_j^{(l)} + b^{(l)}\right)
+$$
 
 其中$h_i^{(l)}$为第$l$层节点$i$的特征向量，$\mathcal{N}(i)$为节点$i$的邻居集合，$c_{ij}$为归一化系数，$W^{(l)}$为可学习权重矩阵。在网络结构上，当输入维度与隐藏维度不匹配时，系统首先通过输入投影将64维特征映射为128维；随后经过3层GCNConv（隐藏维度128），每层后接LayerNorm、ReLU和Dropout(0.3)；此外，每层GCNConv的输出与输入进行残差连接，以缓解深层图网络的梯度消失问题。
 
@@ -951,7 +967,9 @@ $$h_i^{(l+1)} = \sigma\left(\sum_{j \in \mathcal{N}(i)} \frac{1}{c_{ij}} W^{(l)}
 
 ClassQueryHead采用类查询注意力机制，定义12个可学习的类查询向量$Q \in \mathbb{R}^{12 \times 128}$，分别对应12类RNA修饰。通过多头注意力计算（8个注意力头），类查询向量与节点特征进行交互：
 
-$$\text{Attention}(Q, K, V) = \text{softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right)V$$
+$$
+\text{Attention}(Q, K, V) = \text{softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right)V
+$$
 
 其中$K$和$V$来自GCNBlock的输出节点特征，$Q$为12个类查询向量。注意力输出经过全连接层和Softmax激活，生成12类修饰的预测概率。
 
@@ -964,14 +982,15 @@ $$\text{Attention}(Q, K, V) = \text{softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right)
 
 **表8 模型变体对比表**
 
-| 变体 | 文件 | 架构特点 | 应用场景 | 参数量 |
-|------|------|---------|---------|--------|
-| mRModN | `mrmodn.py` | 主网络，标准三阶段DCPRES | 通用12类修饰预测 | ~2.1M |
-| ModX | `modx.py` | 修饰类型消融变体，移除特定模块 | 消融实验 | 可配置 |
-| MultiRM | `multirm.py` | 多任务多修饰联合学习 | 多修饰联合预测 | ~3.5M |
-| EvoRMD | `evormd_human.py` | 集成进化保守性特征 | 泛化能力研究 | ~2.8M |
-| AblaModel | `abla_model.py` | 消融实验专用，模块可开关 | 3×3消融矩阵 | 可配置 |
-| **DCPRES** | `dcpres.py` | **主推模型**，基于RGCNFormer基础架构优化，GCN可替换 | **生产环境部署** | ~2.3M |
+
+| 变体       | 文件              | 架构特点                                            | 应用场景         | 参数量 |
+| ---------- | ----------------- | --------------------------------------------------- | ---------------- | ------ |
+| mRModN     | `mrmodn.py`       | 主网络，标准三阶段DCPRES                            | 通用12类修饰预测 | ~2.1M  |
+| ModX       | `modx.py`         | 修饰类型消融变体，移除特定模块                      | 消融实验         | 可配置 |
+| MultiRM    | `multirm.py`      | 多任务多修饰联合学习                                | 多修饰联合预测   | ~3.5M  |
+| EvoRMD     | `evormd_human.py` | 集成进化保守性特征                                  | 泛化能力研究     | ~2.8M  |
+| AblaModel  | `abla_model.py`   | 消融实验专用，模块可开关                            | 3×3消融矩阵     | 可配置 |
+| **DCPRES** | `dcpres.py`       | **主推模型**，基于RGCNFormer基础架构优化，GCN可替换 | **生产环境部署** | ~2.3M  |
 
 **GCN模块替换说明**：
 
@@ -983,23 +1002,25 @@ DCPRES架构采用模块化设计，GCNBlock模块支持灵活替换。系统后
 
 **表8-1 DCPRES分类性能对比表**
 
-| 模型 | 准确率(Acc) | AUC | AUPRC | 精确率 | 召回率 | F1分数 | MCC |
-|------|------------|-----|-------|--------|--------|--------|-----|
-| **DCPRES** | **0.928** | **0.955** | **0.941** | **0.911** | **0.968** | **0.935** | **0.865** |
-| ProCSE | 0.770 | 0.841 | 0.811 | 0.725 | 0.901 | 0.799 | 0.566 |
-| GCN | 0.666 | 0.632 | 0.614 | 0.628 | 0.932 | 0.741 | 0.380 |
-| K-Means | 0.332 | 0.449 | 0.433 | 0.335 | 0.594 | 0.422 | 0.021 |
-| DSCPS | 0.602 | 0.649 | 0.633 | 0.585 | 0.854 | 0.682 | 0.251 |
+
+| 模型       | 准确率(Acc) | AUC       | AUPRC     | 精确率    | 召回率    | F1分数    | MCC       |
+| ---------- | ----------- | --------- | --------- | --------- | --------- | --------- | --------- |
+| **DCPRES** | **0.928**   | **0.955** | **0.941** | **0.911** | **0.968** | **0.935** | **0.865** |
+| ProCSE     | 0.770       | 0.841     | 0.811     | 0.725     | 0.901     | 0.799     | 0.566     |
+| GCN        | 0.666       | 0.632     | 0.614     | 0.628     | 0.932     | 0.741     | 0.380     |
+| K-Means    | 0.332       | 0.449     | 0.433     | 0.335     | 0.594     | 0.422     | 0.021     |
+| DSCPS      | 0.602       | 0.649     | 0.633     | 0.585     | 0.854     | 0.682     | 0.251     |
 
 **表8-2 DCPRES定位性能对比表**
 
-| 模型 | Top-1 | Top-3 | Top-5 | Top-7 | Top-10 | Top-20 | Top-50 |
-|------|-------|-------|-------|-------|--------|--------|--------|
+
+| 模型       | Top-1     | Top-3     | Top-5     | Top-7     | Top-10    | Top-20    | Top-50    |
+| ---------- | --------- | --------- | --------- | --------- | --------- | --------- | --------- |
 | **DCPRES** | **0.869** | **0.915** | **0.927** | **0.934** | **0.940** | **0.954** | **0.973** |
-| ProCSE | 0.026 | 0.051 | 0.066 | 0.078 | 0.094 | 0.141 | 0.246 |
-| GCN | 0.263 | 0.467 | 0.591 | 0.683 | 0.780 | 0.915 | 0.966 |
-| K-Means | 0.043 | 0.347 | 0.451 | 0.583 | 0.570 | 0.685 | 0.756 |
-| DSCPS | 0.026 | 0.053 | 0.071 | 0.084 | 0.098 | 0.133 | 0.208 |
+| ProCSE     | 0.026     | 0.051     | 0.066     | 0.078     | 0.094     | 0.141     | 0.246     |
+| GCN        | 0.263     | 0.467     | 0.591     | 0.683     | 0.780     | 0.915     | 0.966     |
+| K-Means    | 0.043     | 0.347     | 0.451     | 0.583     | 0.570     | 0.685     | 0.756     |
+| DSCPS      | 0.026     | 0.053     | 0.071     | 0.084     | 0.098     | 0.133     | 0.208     |
 
 **性能分析**：
 
@@ -1050,21 +1071,18 @@ graph TD
 **处理步骤详细说明**：
 
 1. **碱基字符验证**：检查输入序列仅包含A、C、G、U、T、N六种合法字符，拒绝包含其他字符的输入。
-
 2. **碱基映射**：将T碱基自动转换为U碱基（RNA中使用U而非T）。
-
 3. **One-hot编码**：将每个碱基转换为4维one-hot向量。对于N碱基，使用均匀分布向量[0.25, 0.25, 0.25, 0.25]表示碱基的不确定性。
-
 4. **长度标准化**：将序列统一处理为1001nt长度。这一长度选择基于训练数据的统计分布，能够覆盖绝大多数RNA序列的修饰位点。
+
    - **填充（Padding）**：短于1001nt的序列，在左右两端对称填充N碱基，确保中心区域的序列信息不偏移；
    - **截取（Truncation）**：长于1001nt的序列，从中间位置截取1001nt，保留序列的中心区域。
-
 5. **LinearFold二级结构预测**：调用LinearFold C++工具，输入RNA序列，输出dot-bracket格式的二级结构字符串。
-
 6. **图构建**：基于二级结构信息构建PyG图数据。边索引包含两类边：
+
    - **碱基配对边**：来自二级结构中的配对关系，包括Watson-Crick配对（A-U、G-C）和Wobble配对（G-U）；
    - **序列相邻边**：每个碱基与其前后相邻碱基之间的连接（i↔i+1），反映RNA链的共价连接。
-   
+
    最终输出PyG Data对象，包含节点特征`x=(1001, 4)`、边索引`edge_index=(2, E)`、标签`y=(1, 12)`、位点标签`y_site=(1001,)`以及各类注意力掩码（`attn_mask_A/C/G/U`和`attn_mask_N`）。
 
 #### 3.2.5 缓存与任务调度设计
@@ -1109,18 +1127,18 @@ graph TD
 
 **缓存键设计详细说明**：
 
-| 缓存键格式 | 数据类型 | 存储内容 | TTL | 说明 |
-|-----------|---------|---------|-----|------|
-| `task:{sha256}` | String (JSON) | 完整预测结果 | 24小时 | 相同序列的缓存复用 |
-| `batch_job:{uuid}` | Hash | 任务状态、进度、结果 | 24小时 | 批量任务管理 |
-| `wx_user:{openid}` | Hash | 用户信息、会话密钥 | 30天 | 微信用户会话 |
+
+| 缓存键格式         | 数据类型      | 存储内容             | TTL    | 说明               |
+| ------------------ | ------------- | -------------------- | ------ | ------------------ |
+| `task:{sha256}`    | String (JSON) | 完整预测结果         | 24小时 | 相同序列的缓存复用 |
+| `batch_job:{uuid}` | Hash          | 任务状态、进度、结果 | 24小时 | 批量任务管理       |
+| `wx_user:{openid}` | Hash          | 用户信息、会话密钥   | 30天   | 微信用户会话       |
 
 ##### 3.2.5.2 Celery任务队列
 
 系统定义了两个Celery任务，实现异步推理和批量处理：
 
 1. **`run_prediction_task`**：单条推理任务，负责处理单个RNA序列的预测请求。任务流程包括LinearFold结构预测→图构建→DCPRES推理→结果缓存。
-
 2. **`process_sequence_in_batch`**：批量推理子任务，负责处理批量任务中的单个序列。多个子任务并行执行，通过Redis Hash的`HINCRBY`命令更新进度。
 
 **任务状态流转**：
@@ -1196,18 +1214,17 @@ erDiagram
 **实体关系详细说明**：
 
 1. **TASK（单条推理结果）**：以序列的SHA256哈希值作为键，实现相同序列的缓存复用。当不同用户提交相同的RNA序列时，系统直接返回缓存结果，避免重复计算。存储内容包括预测分类结果（12类概率）、注意力权重矩阵、二级结构数据和图结构数据等完整信息。
-
 2. **BATCH_JOB（批量推理任务）**：以UUID作为键，管理批量任务的状态和结果。一个批量任务包含多个序列的推理子任务，与TASK之间为1:N关系。通过Redis Hash结构存储，支持原子性的进度更新（`HINCRBY`命令）。
-
 3. **WX_USER（微信用户信息）**：以微信openid作为键，存储用户的基本信息和会话数据。一个用户可以创建多个批量任务，与BATCH_JOB之间为1:N关系。
 
 **Redis数据结构详细说明**：
 
-| 实体 | Redis类型 | 键格式 | 字段数 | TTL |
-|------|----------|--------|--------|-----|
-| TASK | String (JSON) | `task:{sha256}` | 8 | 24小时 |
-| BATCH_JOB | Hash | `batch_job:{uuid}` | 6 | 24小时 |
-| WX_USER | Hash | `wx_user:{openid}` | 5 | 30天 |
+
+| 实体      | Redis类型     | 键格式             | 字段数 | TTL    |
+| --------- | ------------- | ------------------ | ------ | ------ |
+| TASK      | String (JSON) | `task:{sha256}`    | 8      | 24小时 |
+| BATCH_JOB | Hash          | `batch_job:{uuid}` | 6      | 24小时 |
+| WX_USER   | Hash          | `wx_user:{openid}` | 5      | 30天   |
 
 ---
 
@@ -1261,13 +1278,14 @@ GMM能够提供软聚类结果（概率归属），表达数据点对各簇的�
 
 下表总结了上述常用聚类算法的关键特性对比：
 
-| 算法 | 簇形状假设 | 是否需指定簇数 | 时间复杂度 | 抗噪声能力 | 适用场景 |
-|------|-----------|--------------|-----------|-----------|---------|
-| K-Means | 球形（凸形） | 是 | $O(nKt)$ | 弱 | 大规模数据快速聚类 |
-| 层次聚类 | 无强假设 | 否 | $O(n^3)$ | 弱 | 小规模数据层次结构分析 |
-| DBSCAN | 任意形状 | 否 | $O(n\log n)$ | 强 | 含噪声的非凸形数据 |
-| GMM | 椭球形 | 是 | $O(nKt d^2)$ | 中 | 需要软聚类/概率归属 |
-| 谱聚类 | 任意形状 | 是 | $O(n^3)$ | 中 | 图结构数据/非凸形聚类 |
+
+| 算法     | 簇形状假设   | 是否需指定簇数 | 时间复杂度   | 抗噪声能力 | 适用场景               |
+| -------- | ------------ | -------------- | ------------ | ---------- | ---------------------- |
+| K-Means  | 球形（凸形） | 是             | $O(nKt)$     | 弱         | 大规模数据快速聚类     |
+| 层次聚类 | 无强假设     | 否             | $O(n^3)$     | 弱         | 小规模数据层次结构分析 |
+| DBSCAN   | 任意形状     | 否             | $O(n\log n)$ | 强         | 含噪声的非凸形数据     |
+| GMM      | 椭球形       | 是             | $O(nKt d^2)$ | 中         | 需要软聚类/概率归属    |
+| 谱聚类   | 任意形状     | 是             | $O(n^3)$     | 中         | 图结构数据/非凸形聚类  |
 
 在DCPRES系统中，不同聚类算法可根据具体分析需求灵活选用：K-Means和GMM适合对高维特征向量进行快速分组；DBSCAN适合数据质量控制和异常样本识别；层次聚类适合展示样本间的亲缘关系；谱聚类则与系统的图结构数据具有天然的适配性。
 
@@ -1299,7 +1317,9 @@ DCPRES模型中的GCNBlock模块本质上实现了一种**图级特征聚合**�
 
 每个节点$v_i$向其邻居节点发送消息，消息内容为节点特征的线性变换：
 
-$$m_{i \leftarrow j} = W^{(l)} h_j^{(l)} + b^{(l)}$$
+$$
+m_{i \leftarrow j} = W^{(l)} h_j^{(l)} + b^{(l)}
+$$
 
 其中$W^{(l)}$为可学习权重矩阵，$h_j^{(l)}$为节点$j$在第$l$层的特征向量。
 
@@ -1307,7 +1327,9 @@ $$m_{i \leftarrow j} = W^{(l)} h_j^{(l)} + b^{(l)}$$
 
 每个节点接收来自邻居节点的消息，通过聚合函数进行汇总。RGCN采用加权求和聚合：
 
-$$\bar{m}_i = \sum_{j \in \mathcal{N}(i)} \frac{1}{c_{ij}} m_{i \leftarrow j}$$
+$$
+\bar{m}_i = \sum_{j \in \mathcal{N}(i)} \frac{1}{c_{ij}} m_{i \leftarrow j}
+$$
 
 其中$c_{ij}$为归一化系数，通常取$\sqrt{|\mathcal{N}(i)| \cdot |\mathcal{N}(j)|}$。
 
@@ -1315,7 +1337,9 @@ $$\bar{m}_i = \sum_{j \in \mathcal{N}(i)} \frac{1}{c_{ij}} m_{i \leftarrow j}$$
 
 基于聚合后的消息更新节点表示，包含残差连接和非线性激活：
 
-$$h_i^{(l+1)} = \sigma\left(\bar{m}_i + h_i^{(l)}\right)$$
+$$
+h_i^{(l+1)} = \sigma\left(\bar{m}_i + h_i^{(l)}\right)
+$$
 
 其中$\sigma$为ReLU激活函数，$h_i^{(l)}$为残差连接。
 
@@ -1372,7 +1396,9 @@ graph TD
 
 轮廓系数综合评估聚类的紧密度和分离度。对于每个样本$i$，其轮廓系数定义为：
 
-$$s(i) = \frac{b(i) - a(i)}{\max(a(i), b(i))}$$
+$$
+s(i) = \frac{b(i) - a(i)}{\max(a(i), b(i))}
+$$
 
 其中$a(i)$为样本$i$与同簇其他样本的平均距离（紧密度），$b(i)$为样本$i$与最近邻簇中样本的平均距离（分离度）。轮廓系数的取值范围为[-1, 1]，值越大表示聚类效果越好。
 
@@ -1380,7 +1406,9 @@ $$s(i) = \frac{b(i) - a(i)}{\max(a(i), b(i))}$$
 
 Calinski-Harabasz指数（方差比准则）评估聚类的方差比：
 
-$$CH = \frac{\text{tr}(B_k) / (k-1)}{\text{tr}(W_k) / (n-k)}$$
+$$
+CH = \frac{\text{tr}(B_k) / (k-1)}{\text{tr}(W_k) / (n-k)}
+$$
 
 其中$B_k$为簇间散布矩阵，$W_k$为簇内散布矩阵，$k$为簇数，$n$为样本数。CH值越大表示簇间分离度越高、簇内紧密度越好。
 
@@ -1388,7 +1416,9 @@ $$CH = \frac{\text{tr}(B_k) / (k-1)}{\text{tr}(W_k) / (n-k)}$$
 
 Davies-Bouldin指数评估聚类的相似性：
 
-$$DB = \frac{1}{k} \sum_{i=1}^{k} \max_{j \neq i} \frac{S_i + S_j}{d_{ij}}$$
+$$
+DB = \frac{1}{k} \sum_{i=1}^{k} \max_{j \neq i} \frac{S_i + S_j}{d_{ij}}
+$$
 
 其中$S_i$为簇$i$的簇内散布度，$d_{ij}$为簇$i$和簇$j$中心之间的距离。DB值越小表示聚类效果越好。
 
@@ -1498,16 +1528,17 @@ graph TD
 
 **表9 消融实验结果表**
 
-| 实验编号 | 实验设置 | ParallelCNNBlock | GCNBlock | ClassQueryHead | 轮廓系数 | F1分数 | AUC-ROC |
-|---------|---------|-----------------|----------|----------------|---------|--------|---------|
-| A1 | 完整模型 | ✓ | ✓ | ✓ | 0.68 | 0.85 | 0.92 |
-| A2 | 无CNN | ✗ | ✓ | ✓ | 0.62 | 0.79 | 0.87 |
-| A3 | 无GCN | ✓ | ✗ | ✓ | 0.58 | 0.75 | 0.83 |
-| A4 | 无ClassQuery | ✓ | ✓ | ✗ | 0.55 | 0.72 | 0.80 |
-| A5 | 仅CNN | ✓ | ✗ | ✗ | 0.45 | 0.65 | 0.73 |
-| A6 | 仅GCN | ✗ | ✓ | ✗ | 0.48 | 0.68 | 0.76 |
-| A7 | 仅ClassQuery | ✗ | ✗ | ✓ | 0.42 | 0.62 | 0.70 |
-| A8 | 无任何模块 | ✗ | ✗ | ✗ | 0.30 | 0.50 | 0.55 |
+
+| 实验编号 | 实验设置     | ParallelCNNBlock | GCNBlock | ClassQueryHead | 轮廓系数 | F1分数 | AUC-ROC |
+| -------- | ------------ | ---------------- | -------- | -------------- | -------- | ------ | ------- |
+| A1       | 完整模型     | ✓               | ✓       | ✓             | 0.68     | 0.85   | 0.92    |
+| A2       | 无CNN        | ✗               | ✓       | ✓             | 0.62     | 0.79   | 0.87    |
+| A3       | 无GCN        | ✓               | ✗       | ✓             | 0.58     | 0.75   | 0.83    |
+| A4       | 无ClassQuery | ✓               | ✓       | ✗             | 0.55     | 0.72   | 0.80    |
+| A5       | 仅CNN        | ✓               | ✗       | ✗             | 0.45     | 0.65   | 0.73    |
+| A6       | 仅GCN        | ✗               | ✓       | ✗             | 0.48     | 0.68   | 0.76    |
+| A7       | 仅ClassQuery | ✗               | ✗       | ✓             | 0.42     | 0.62   | 0.70    |
+| A8       | 无任何模块   | ✗               | ✗       | ✗             | 0.30     | 0.50   | 0.55    |
 
 **实验结果分析**：
 
@@ -1533,12 +1564,13 @@ graph TD
 
 **表10 模型FLOPs对比表**
 
-| 模型变体 | FLOPs (G) | 参数量 (M) | 推理时间 (ms) | 轮廓系数 |
-|---------|-----------|-----------|-------------|---------|
-| 完整模型 | 2.15 | 2.1 | 85 | 0.68 |
-| 无CNN | 1.82 | 1.8 | 72 | 0.62 |
-| 无GCN | 1.45 | 1.5 | 58 | 0.58 |
-| 无ClassQuery | 1.95 | 1.9 | 78 | 0.55 |
+
+| 模型变体     | FLOPs (G) | 参数量 (M) | 推理时间 (ms) | 轮廓系数 |
+| ------------ | --------- | ---------- | ------------- | -------- |
+| 完整模型     | 2.15      | 2.1        | 85            | 0.68     |
+| 无CNN        | 1.82      | 1.8        | 72            | 0.62     |
+| 无GCN        | 1.45      | 1.5        | 58            | 0.58     |
+| 无ClassQuery | 1.95      | 1.9        | 78            | 0.55     |
 
 **效率分析**：
 
@@ -1636,16 +1668,17 @@ graph TB
 
 #### 环境变量配置
 
-| 变量名 | 说明 | 默认值 | 是否必填 |
-|--------|------|--------|---------|
-| REDIS_HOST | Redis服务器地址 | localhost | 是 |
-| REDIS_PORT | Redis端口 | 6379 | 否 |
-| MODEL_PATH | 模型文件路径 | /data/models | 是 |
-| LINEARFOLD_PATH | LinearFold可执行文件路径 | /usr/local/bin/linearfold | 是 |
-| WX_APPID | 微信小程序AppID | — | 否（小程序功能需要） |
-| WX_SECRET | 微信小程序Secret | — | 否（小程序功能需要） |
-| CELERY_BROKER_URL | Celery消息代理URL | redis://localhost:6379/0 | 否 |
-| FLASK_ENV | Flask运行环境 | production | 否 |
+
+| 变量名            | 说明                     | 默认值                    | 是否必填             |
+| ----------------- | ------------------------ | ------------------------- | -------------------- |
+| REDIS_HOST        | Redis服务器地址          | localhost                 | 是                   |
+| REDIS_PORT        | Redis端口                | 6379                      | 否                   |
+| MODEL_PATH        | 模型文件路径             | /data/models              | 是                   |
+| LINEARFOLD_PATH   | LinearFold可执行文件路径 | /usr/local/bin/linearfold | 是                   |
+| WX_APPID          | 微信小程序AppID          | —                        | 否（小程序功能需要） |
+| WX_SECRET         | 微信小程序Secret         | —                        | 否（小程序功能需要） |
+| CELERY_BROKER_URL | Celery消息代理URL        | redis://localhost:6379/0  | 否                   |
+| FLASK_ENV         | Flask运行环境            | production                | 否                   |
 
 ### 附录B：API完整参考
 
@@ -1654,6 +1687,7 @@ graph TB
 所有API接口采用统一的JSON格式：
 
 **统一请求格式**：
+
 ```json
 {
   "rnaSequence": "AUGCAUGCAUGC...",
@@ -1663,6 +1697,7 @@ graph TB
 ```
 
 **统一响应格式**：
+
 ```json
 {
   "code": 200,
@@ -1676,36 +1711,38 @@ graph TB
 
 #### 错误码对照表
 
-| 错误码 | 说明 | 处理建议 |
-|--------|------|---------|
-| 200 | 请求成功 | — |
-| 202 | 任务已接受 | 轮询查询结果 |
-| 400 | 请求参数错误 | 检查序列格式和参数类型 |
-| 401 | 未认证 | 重新登录获取token |
-| 403 | 无权限 | 联系管理员授权 |
-| 404 | 资源不存在 | 检查jobId是否正确 |
-| 429 | 请求频率过高 | 降低请求频率 |
-| 500 | 服务器内部错误 | 联系技术支持 |
-| 503 | 服务不可用 | 等待服务恢复 |
+
+| 错误码 | 说明           | 处理建议               |
+| ------ | -------------- | ---------------------- |
+| 200    | 请求成功       | —                     |
+| 202    | 任务已接受     | 轮询查询结果           |
+| 400    | 请求参数错误   | 检查序列格式和参数类型 |
+| 401    | 未认证         | 重新登录获取token      |
+| 403    | 无权限         | 联系管理员授权         |
+| 404    | 资源不存在     | 检查jobId是否正确      |
+| 429    | 请求频率过高   | 降低请求频率           |
+| 500    | 服务器内部错误 | 联系技术支持           |
+| 503    | 服务不可用     | 等待服务恢复           |
 
 ### 附录C：模型参数说明
 
 DCPRES超参数配置（`json/human.json`）：
 
-| 参数名 | 说明 | 默认值 | 取值范围 |
-|--------|------|--------|---------|
-| cnn_hidden_dim | CNN隐藏层维度 | 64 | 32~256 |
-| cnn_kernel_sizes | CNN卷积核尺寸 | [1, 3, 5, 7] | — |
-| cnn_dropout | CNN Dropout比率 | 0.1 | 0.0~0.5 |
-| gcn_hidden_dim | GCN隐藏层维度 | 128 | 64~512 |
-| gcn_out_channels | GCN输出通道数 | 128 | 64~256 |
-| gcn_num_layers | GCN层数 | 3 | 1~5 |
-| gcn_dropout | GCN Dropout比率 | 0.3 | 0.0~0.5 |
-| num_classes | 分类类别数 | 12 | — |
-| num_attn_heads | 注意力头数 | 8 | 1~16 |
-| attn_dropout | 注意力Dropout比率 | 0.1 | 0.0~0.5 |
-| seq_length | 输入序列长度 | 1001 | — |
-| input_dim | 输入特征维度 | 4 (one-hot) | — |
+
+| 参数名           | 说明              | 默认值       | 取值范围 |
+| ---------------- | ----------------- | ------------ | -------- |
+| cnn_hidden_dim   | CNN隐藏层维度     | 64           | 32~256   |
+| cnn_kernel_sizes | CNN卷积核尺寸     | [1, 3, 5, 7] | —       |
+| cnn_dropout      | CNN Dropout比率   | 0.1          | 0.0~0.5  |
+| gcn_hidden_dim   | GCN隐藏层维度     | 128          | 64~512   |
+| gcn_out_channels | GCN输出通道数     | 128          | 64~256   |
+| gcn_num_layers   | GCN层数           | 3            | 1~5      |
+| gcn_dropout      | GCN Dropout比率   | 0.3          | 0.0~0.5  |
+| num_classes      | 分类类别数        | 12           | —       |
+| num_attn_heads   | 注意力头数        | 8            | 1~16     |
+| attn_dropout     | 注意力Dropout比率 | 0.1          | 0.0~0.5  |
+| seq_length       | 输入序列长度      | 1001         | —       |
+| input_dim        | 输入特征维度      | 4 (one-hot)  | —       |
 
 ### 附录D：数据集说明
 
@@ -1713,13 +1750,14 @@ DCPRES超参数配置（`json/human.json`）：
 
 **表11 数据集说明表**
 
-| 数据集 | 文件 | 修饰类型 | 样本数 | 序列长度 | 数据格式 | 说明 |
-|--------|------|---------|--------|---------|---------|------|
-| Human | `dataset/human.py` | 12类 | ~50,000 | 1001nt | seq.npy + 1001loc.npy + 12loc.npy | 标准人类RNA修饰数据集 |
-| Plant | `dataset/plant.py` | 多类 | ~20,000 | 1001nt | seq.npy + loc.npy | 植物RNA修饰数据集 |
-| ac4C | `dataset/ac4c.py` | 单类 | ~5,000 | 1001nt | seq.npy + loc.npy | ac4C专用数据集（平衡/非平衡） |
-| MultiRM | `dataset/multirm.py` | 多类 | ~30,000 | 1001nt | seq.npy + loc.npy | 多修饰联合数据集 |
-| Gen3 | `dataset/gen3.py` | 多类 | ~40,000 | 1001nt | seq.npy + loc.npy | 第3代数据集 |
+
+| 数据集  | 文件                 | 修饰类型 | 样本数  | 序列长度 | 数据格式                          | 说明                          |
+| ------- | -------------------- | -------- | ------- | -------- | --------------------------------- | ----------------------------- |
+| Human   | `dataset/human.py`   | 12类     | ~50,000 | 1001nt   | seq.npy + 1001loc.npy + 12loc.npy | 标准人类RNA修饰数据集         |
+| Plant   | `dataset/plant.py`   | 多类     | ~20,000 | 1001nt   | seq.npy + loc.npy                 | 植物RNA修饰数据集             |
+| ac4C    | `dataset/ac4c.py`    | 单类     | ~5,000  | 1001nt   | seq.npy + loc.npy                 | ac4C专用数据集（平衡/非平衡） |
+| MultiRM | `dataset/multirm.py` | 多类     | ~30,000 | 1001nt   | seq.npy + loc.npy                 | 多修饰联合数据集              |
+| Gen3    | `dataset/gen3.py`    | 多类     | ~40,000 | 1001nt   | seq.npy + loc.npy                 | 第3代数据集                   |
 
 **数据格式说明**：
 
@@ -1730,28 +1768,29 @@ DCPRES超参数配置（`json/human.json`）：
 
 ### 附录E：术语表
 
-| 缩写 | 英文全称 | 中文名称 |
-|------|---------|---------|
+
+| 缩写   | 英文全称                                                 | 中文名称               |
+| ------ | -------------------------------------------------------- | ---------------------- |
 | DCPRES | Dual-Channel Pattern Recognition with Enhanced Structure | 双通道模式识别增强结构 |
-| RGCN | Relational Graph Convolutional Network | 关系图卷积网络 |
-| GCN | Graph Convolutional Network | 图卷积网络 |
-| CNN | Convolutional Neural Network | 卷积神经网络 |
-| GNN | Graph Neural Network | 图神经网络 |
-| m6A | N6-methyladenosine | N6-甲基腺苷 |
-| m5C | 5-methylcytosine | 5-甲基胞苷 |
-| Ψ | Pseudouridine | 假尿嘧啶 |
-| ac4C | N4-acetylcytidine | N4-乙酰胞苷 |
-| m1A | N1-methyladenosine | N1-甲基腺苷 |
-| m6Am | N6,2'-O-dimethyladenosine | N6,2'-O-二甲基腺苷 |
-| m7G | 7-methylguanosine | 7-甲基鸟苷 |
-| IG | Integrated Gradients | 积分梯度 |
-| UMAP | Uniform Manifold Approximation and Projection | 统一流形逼近与投影 |
-| t-SNE | t-distributed Stochastic Neighbor Embedding | t分布随机邻域嵌入 |
-| PCA | Principal Component Analysis | 主成分分析 |
-| ONNX | Open Neural Network Exchange | 开放神经网络交换 |
-| FLOPs | Floating Point Operations | 浮点运算次数 |
-| MoHE | Mixture of Experts | 混合专家 |
-| SSE | Sum of Squared Errors | 误差平方和 |
+| RGCN   | Relational Graph Convolutional Network                   | 关系图卷积网络         |
+| GCN    | Graph Convolutional Network                              | 图卷积网络             |
+| CNN    | Convolutional Neural Network                             | 卷积神经网络           |
+| GNN    | Graph Neural Network                                     | 图神经网络             |
+| m6A    | N6-methyladenosine                                       | N6-甲基腺苷            |
+| m5C    | 5-methylcytosine                                         | 5-甲基胞苷             |
+| Ψ     | Pseudouridine                                            | 假尿嘧啶               |
+| ac4C   | N4-acetylcytidine                                        | N4-乙酰胞苷            |
+| m1A    | N1-methyladenosine                                       | N1-甲基腺苷            |
+| m6Am   | N6,2'-O-dimethyladenosine                                | N6,2'-O-二甲基腺苷     |
+| m7G    | 7-methylguanosine                                        | 7-甲基鸟苷             |
+| IG     | Integrated Gradients                                     | 积分梯度               |
+| UMAP   | Uniform Manifold Approximation and Projection            | 统一流形逼近与投影     |
+| t-SNE  | t-distributed Stochastic Neighbor Embedding              | t分布随机邻域嵌入      |
+| PCA    | Principal Component Analysis                             | 主成分分析             |
+| ONNX   | Open Neural Network Exchange                             | 开放神经网络交换       |
+| FLOPs  | Floating Point Operations                                | 浮点运算次数           |
+| MoHE   | Mixture of Experts                                       | 混合专家               |
+| SSE    | Sum of Squared Errors                                    | 误差平方和             |
 
 ---
 
@@ -1791,46 +1830,47 @@ DCPRES超参数配置（`json/human.json`）：
 
 ## 图表清单
 
-| 编号 | 图表名称 | 所在章节 | 图表类型 |
-|------|---------|---------|---------|
-| 图1 | 系统用例图 | 1.5.2 | Mermaid用例图 |
-| 图2 | 系统总体架构图 | 2.1.1 | Mermaid分层架构图 |
-| 图3 | 系统模块关系图 | 2.3 | Mermaid模块依赖图 |
-| 图4 | 系统顶层数据流图 | 2.4.1 | Mermaid DFD |
-| 图5 | 系统第一层数据流图 | 2.4.2 | Mermaid DFD |
-| 图6 | 核心推理流程数据流图 | 2.4.3 | Mermaid DFD |
-| 图7 | Web前端组件层次结构图 | 3.1.1.2 | Mermaid树形图 |
-| 图8 | 前端状态流转图 | 3.1.3 | Mermaid状态机图 |
-| 图9 | 推理流程时序图 | 3.2.2.1 | Mermaid时序图 |
-| 图10 | DCPRES模型结构图 | 3.2.3.1 | Mermaid流程图 |
-| 图11 | 数据处理流程图 | 3.2.4.1 | Mermaid流程图 |
-| 图12 | 缓存策略流程图 | 3.2.5.1 | Mermaid流程图 |
-| 图13 | Redis数据模型ER图 | 3.2.6.1 | Mermaid ER图 |
-| 图14 | UMAP聚类散点图 | 4.3.2 | 散点图（ECharts） |
-| 图15 | 少样本聚类效果图 | 4.4.4 | 柱状图 |
-| 图16 | 零样本聚类迁移示意图 | 4.5.3 | Mermaid流程图 |
-| 图17 | 消融实验结果热力图 | 4.6.4 | 热力图（ECharts） |
-| 表1 | 系统可视化组件列表 | 1.3.2 | 表格 |
-| 表2 | 系统技术选型表 | 2.2 | 表格 |
-| 表3 | 前端路由表 | 3.1.2 | 表格 |
-| 表4 | 可视化组件数据源与交互设计表 | 3.1.4 | 表格 |
-| 表5 | 微信小程序页面结构 | 3.1.5.1 | 表格 |
-| 表6 | 小程序端与Web端功能对比 | 3.1.5.2 | 表格 |
-| 表7 | 核心API端点清单 | 3.2.1.1 | 表格 |
-| 表8 | 模型变体对比表 | 3.2.3.2 | 表格 |
-| 表8-1 | DCPRES分类性能对比表 | 3.2.3.3 | 表格 |
-| 表8-2 | DCPRES定位性能对比表 | 3.2.3.3 | 表格 |
-| 表9 | 消融实验结果表 | 4.6.1 | 表格 |
-| 表10 | 模型FLOPs对比表 | 4.6.3 | 表格 |
-| 表11 | 数据集说明表 | 附录D | 表格 |
+
+| 编号  | 图表名称                     | 所在章节 | 图表类型          |
+| ----- | ---------------------------- | -------- | ----------------- |
+| 图1   | 系统用例图                   | 1.5.2    | Mermaid用例图     |
+| 图2   | 系统总体架构图               | 2.1.1    | Mermaid分层架构图 |
+| 图3   | 系统模块关系图               | 2.3      | Mermaid模块依赖图 |
+| 图4   | 系统顶层数据流图             | 2.4.1    | Mermaid DFD       |
+| 图5   | 系统第一层数据流图           | 2.4.2    | Mermaid DFD       |
+| 图6   | 核心推理流程数据流图         | 2.4.3    | Mermaid DFD       |
+| 图7   | Web前端组件层次结构图        | 3.1.1.2  | Mermaid树形图     |
+| 图8   | 前端状态流转图               | 3.1.3    | Mermaid状态机图   |
+| 图9   | 推理流程时序图               | 3.2.2.1  | Mermaid时序图     |
+| 图10  | DCPRES模型结构图             | 3.2.3.1  | Mermaid流程图     |
+| 图11  | 数据处理流程图               | 3.2.4.1  | Mermaid流程图     |
+| 图12  | 缓存策略流程图               | 3.2.5.1  | Mermaid流程图     |
+| 图13  | Redis数据模型ER图            | 3.2.6.1  | Mermaid ER图      |
+| 图14  | UMAP聚类散点图               | 4.3.2    | 散点图（ECharts） |
+| 图15  | 少样本聚类效果图             | 4.4.4    | 柱状图            |
+| 图16  | 零样本聚类迁移示意图         | 4.5.3    | Mermaid流程图     |
+| 图17  | 消融实验结果热力图           | 4.6.4    | 热力图（ECharts） |
+| 表1   | 系统可视化组件列表           | 1.3.2    | 表格              |
+| 表2   | 系统技术选型表               | 2.2      | 表格              |
+| 表3   | 前端路由表                   | 3.1.2    | 表格              |
+| 表4   | 可视化组件数据源与交互设计表 | 3.1.4    | 表格              |
+| 表5   | 微信小程序页面结构           | 3.1.5.1  | 表格              |
+| 表6   | 小程序端与Web端功能对比      | 3.1.5.2  | 表格              |
+| 表7   | 核心API端点清单              | 3.2.1.1  | 表格              |
+| 表8   | 模型变体对比表               | 3.2.3.2  | 表格              |
+| 表8-1 | DCPRES分类性能对比表         | 3.2.3.3  | 表格              |
+| 表8-2 | DCPRES定位性能对比表         | 3.2.3.3  | 表格              |
+| 表9   | 消融实验结果表               | 4.6.1    | 表格              |
+| 表10  | 模型FLOPs对比表              | 4.6.3    | 表格              |
+| 表11  | 数据集说明表                 | 附录D    | 表格              |
 
 ---
 
-> **文档版本**：v2.1  
-> **最后更新**：2026年6月  
-> **更新说明**：将主体模型由RGCNFormer改为DCPRES，添加DCPRES主推模型说明、性能对比数据、GCN模块替换设计  
-> **编写标准**：本科毕业论文架构说明文档标准  
+> **文档版本**：v2.1
+> **最后更新**：2026年6月
+> **更新说明**：将主体模型由RGCNFormer改为DCPRES，添加DCPRES主推模型说明、性能对比数据、GCN模块替换设计
+> **编写标准**：本科毕业论文架构说明文档标准
 > **图表规范**：所有图表采用Mermaid语法绘制，支持Markdown渲染器直接显示
-</parameter>
-</write_to_file>
-</tool_call>
+> </parameter>
+> </write_to_file>
+> </tool_call>
