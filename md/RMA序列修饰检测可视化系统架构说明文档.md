@@ -835,46 +835,56 @@ stateDiagram-v2
 **图9 推理流程时序图**
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#EDE7E0', 'primaryTextColor': '#4A4440', 'primaryBorderColor': '#C4BAA8', 'lineColor': '#B0A898', 'secondaryColor': '#E2DCD4', 'background': '#F8F5F0', 'fontSize': '13px', 'actorBkg': '#C5CDD8', 'actorTextColor': '#3D4550', 'actorBorder': '#8E9AAA', 'signalColor': '#6B6560', 'signalTextColor': '#4A4440', 'activationBkgColor': '#EDE7E0', 'activationBorderColor': '#C4BAA8', 'sequenceNumberColor': '#F8F5F0', 'noteBkgColor': '#E8DDD0', 'noteTextColor': '#4A4440', 'noteBorderColor': '#C4B8A0'}}}%%
 sequenceDiagram
-    participant 前端 as 前端<br/>(React/小程序)
-    participant Flask as Flask API
-    participant Redis as Redis缓存
-    participant Celery as Celery Worker
-    participant LF as LinearFold
-    participant Model as DCPRES
+    autonumber
 
-    前端->>Flask: POST /api/v1/submit-task<br/>{rnaSequence}
-    Flask->>Flask: 计算SHA256(jobId)
-    Flask->>Redis: GET task:{sha256}
+    actor User as 研究人员
+    participant Frontend as Web前端/微信小程序
+    participant Flask as Flask API服务器
+    participant Redis as Redis结果缓存
+    participant Celery as Celery异步任务服务
+    participant RNAFold as RNAFold结构预测引擎
+    participant ONNX as ONNX推理引擎
+
+    User->>Frontend: 输入RNA序列并提交预测
+    Frontend->>Flask: 提交RNA序列和参数配置
+
+    Flask->>Flask: 验证序列并生成任务标识
+    Flask->>Redis: 查询历史预测结果
 
     alt 缓存命中
-        Redis-->>Flask: 返回缓存结果
-        Flask-->>前端: 200 OK (完整结果JSON)
+        Redis-->>Flask: 返回已有预测结果
+        Flask-->>Frontend: 返回完整预测结果
+        Frontend-->>User: 展示预测结果
     else 缓存未命中
-        Flask->>Celery: apply_async(run_prediction_task)
-        Flask-->>前端: 202 Accepted {jobId, status: "pending"}
-    
-        Note over 前端: 前端开始轮询
+        Redis-->>Flask: 返回缓存未命中
+        Flask->>Celery: 分发异步预测任务
+        Flask-->>Frontend: 返回任务标识
 
-        loop 每2秒轮询
-            前端->>Flask: GET /api/v1/results/:jobId
-            Flask->>Redis: 查询任务状态
-            Redis-->>Flask: status: "processing"
-            Flask-->>前端: {status: "processing"}
+        Note over Frontend,ONNX: 后台预测与前端状态查询同时进行
+
+        Celery->>Celery: 完成序列编码和长度标准化
+        Celery->>RNAFold: 预测RNA二级结构
+        RNAFold-->>Celery: 返回dot-bracket结构
+        Celery->>Celery: 构建RNA图结构
+        Celery->>ONNX: 执行模型推理
+        ONNX-->>Celery: 返回修饰预测结果
+        Celery->>Redis: 保存序列化后的预测结果
+
+        loop 前端定期查询任务状态
+            Frontend->>Flask: 查询任务状态和结果
+            Flask->>Redis: 查询任务对应结果
+
+            alt 任务尚未完成
+                Redis-->>Flask: 返回暂无结果
+                Flask-->>Frontend: 返回处理中状态
+            else 任务已经完成
+                Redis-->>Flask: 返回完整预测结果
+                Flask-->>Frontend: 返回预测结果
+            end
         end
 
-        Celery->>LF: run_linearfold([sequence])
-        LF-->>Celery: dot-bracket二级结构
-        Celery->>Celery: build_edge_index_from_structure()
-        Celery->>Model: model.forward(x, edge_index, batch)
-        Model-->>Celery: {logits, probabilities, attention}
-        Celery->>Redis: SET task:{sha256} (结果JSON, TTL)
-
-        前端->>Flask: GET /api/v1/results/:jobId
-        Flask->>Redis: GET task:{sha256}
-        Redis-->>Flask: 返回缓存结果
-        Flask-->>前端: 200 OK (完整结果JSON)
+        Frontend-->>User: 展示预测结果和可视化数据
     end
 ```
 
