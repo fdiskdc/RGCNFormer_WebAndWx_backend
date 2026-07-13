@@ -19,41 +19,35 @@ tests/
 
 ## Running Tests
 
-### Install pytest
-
-```bash
-pip install pytest
-```
-
 ### Run all tests
 
 ```bash
-python -m pytest tests/ -v
+uv run pytest tests/ -v
 ```
 
 ### Run by category
 
 ```bash
 # Unit tests only
-python -m pytest tests/unit/ -v
+uv run pytest tests/unit/ -v
 
 # Integration tests only
-python -m pytest tests/integration/ -v
+uv run pytest tests/integration/ -v
 
 # Regression tests only
-python -m pytest tests/regression/ -v
+uv run pytest tests/regression/ -v
 ```
 
 ### Run a specific file
 
 ```bash
-python -m pytest tests/unit/test_config.py -v
+uv run pytest tests/unit/test_config.py -v
 ```
 
 ### Collect tests without running
 
 ```bash
-python -m pytest tests/ --collect-only
+uv run pytest tests/ --collect-only
 ```
 
 ## Notes

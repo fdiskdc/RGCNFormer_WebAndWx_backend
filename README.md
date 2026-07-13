@@ -61,7 +61,9 @@ RGCNFormer_WebAndWx_backend/
 ├── main.py                        # 开发服务器入口
 ├── Dockerfile                     # Docker 构建文件
 ├── docker-compose.yml             # Docker 编排文件
-├── requirements.txt               # Python 依赖
+├── pyproject.toml                 # Python 依赖声明（uv）
+├── uv.lock                        # 依赖锁定文件
+├── .python-version                # Python 版本约束
 └── .env.example                   # 环境变量模板
 ```
 
@@ -75,7 +77,8 @@ RGCNFormer_WebAndWx_backend/
 
 ### 环境要求
 
-- Python 3.9+
+- Python 3.11+
+- [uv](https://docs.astral.sh/uv/)（Python 包管理器）
 - Redis 服务器
 - Docker（推荐）
 
@@ -98,26 +101,28 @@ docker-compose logs -f
 ### 方法 2：本地 Flask 开发服务器
 
 ```bash
-pip install -r requirements.txt
+uv sync --locked
 
 # 编译 LinearFold / Compile LinearFold
 cd LinearFold && make && cd ..
 
 # 启动 Celery Worker / Start Celery Worker
-celery -A rgcnformer_backend.workers.tasks.celery_app worker --loglevel=info
+uv run celery -A rgcnformer_backend.workers.tasks.celery_app worker --loglevel=info
 
 # 启动 Flask 开发服务器 / Start Flask dev server
-python main.py
+uv run python main.py
 ```
 
 ### 方法 3：Gunicorn 生产部署
 
 ```bash
+uv sync --locked
+
 # 启动 Celery Worker / Start Celery Worker
-celery -A rgcnformer_backend.workers.tasks.celery_app worker --concurrency=1 --loglevel=info
+uv run celery -A rgcnformer_backend.workers.tasks.celery_app worker --concurrency=1 --loglevel=info
 
 # 使用 Gunicorn 启动 / Start with Gunicorn
-gunicorn -w 1 -b 0.0.0.0:8000 --timeout 120 wsgi:app
+uv run gunicorn -w 1 -b 0.0.0.0:8000 --timeout 120 wsgi:app
 ```
 
 ## API 文档
@@ -151,11 +156,11 @@ gunicorn -w 1 -b 0.0.0.0:8000 --timeout 120 wsgi:app
 
 ```bash
 # 运行单元测试 / Run unit tests
-python -m pytest tests/
+uv run pytest tests/
 
 # 检查类型标注 / Check type annotations
 # （如使用 mypy）/ (if using mypy)
-mypy rgcnformer_backend/
+uv run mypy rgcnformer_backend/
 ```
 
 ## 许可证
@@ -209,7 +214,9 @@ RGCNFormer_WebAndWx_backend/
 ├── main.py                        # Dev server entry
 ├── Dockerfile                     # Docker build file
 ├── docker-compose.yml             # Docker orchestration
-├── requirements.txt               # Python dependencies
+├── pyproject.toml                 # Python dependency declaration (uv)
+├── uv.lock                        # Dependency lock file
+├── .python-version                # Python version constraint
 └── .env.example                   # Environment variable template
 ```
 
@@ -221,7 +228,8 @@ RGCNFormer_WebAndWx_backend/
 
 ### Requirements
 
-- Python 3.9+
+- Python 3.11+
+- [uv](https://docs.astral.sh/uv/) (Python package manager)
 - Redis server
 - Docker (recommended)
 
@@ -238,17 +246,18 @@ docker-compose logs -f
 ### Method 2: Local Flask Dev Server
 
 ```bash
-pip install -r requirements.txt
+uv sync --locked
 cd LinearFold && make && cd ..
-celery -A rgcnformer_backend.workers.tasks.celery_app worker --loglevel=info
-python main.py
+uv run celery -A rgcnformer_backend.workers.tasks.celery_app worker --loglevel=info
+uv run python main.py
 ```
 
 ### Method 3: Gunicorn Production
 
 ```bash
-celery -A rgcnformer_backend.workers.tasks.celery_app worker --concurrency=1 --loglevel=info
-gunicorn -w 1 -b 0.0.0.0:8000 --timeout 120 wsgi:app
+uv sync --locked
+uv run celery -A rgcnformer_backend.workers.tasks.celery_app worker --concurrency=1 --loglevel=info
+uv run gunicorn -w 1 -b 0.0.0.0:8000 --timeout 120 wsgi:app
 ```
 
 ## API Documentation
@@ -258,7 +267,7 @@ See the Chinese section above for the full API table.
 ## Testing
 
 ```bash
-python -m pytest tests/
+uv run pytest tests/
 ```
 
 ## License

@@ -9,3 +9,5 @@ celery.pid
 celery.log
 gunicorn_access.log
 gunicorn_error.log
+.omc
+.omo
