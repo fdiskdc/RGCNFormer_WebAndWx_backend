@@ -9,7 +9,7 @@ services:
   # 提供 REST API 接口，处理预测请求和微信登录 / Provides REST API for prediction requests and WeChat login
   backend:
     build: .
-    container_name: rgcn_backend
+    container_name: mrmodn_backend
     command: uv run gunicorn -w 1 -b 0.0.0.0:8000 --timeout 120 wsgi:app
     ports:
       - "8000:8000"
@@ -29,8 +29,8 @@ services:
   # 异步执行 RNA 预测任务 / Asynchronously executes RNA prediction tasks
   worker:
     build: .
-    container_name: rgcn_worker
-    command: uv run celery -A tasks.celery_app worker --concurrency=1 --loglevel=info
+    container_name: mrmodn_worker
+    command: uv run celery -A mrmodn_backend.workers.tasks.celery_app worker --concurrency=1 --loglevel=info
     volumes:
       - .:/app
     environment:
@@ -48,5 +48,5 @@ services:
   # 用于 Celery 消息队列和预测结果缓存 / Used for Celery message queue and prediction result caching
   redis:
     image: redis:alpine
-    container_name: rgcn_redis
+    container_name: mrmodn_redis
     restart: always

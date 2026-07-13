@@ -1,7 +1,7 @@
 """
 WSGI entry point for Gunicorn production server.
 """
-from rgcnformer_backend.app import create_app
+from mrmodn_backend.app import create_app
 
 app = create_app()
 

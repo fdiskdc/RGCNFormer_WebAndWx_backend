@@ -11,8 +11,8 @@ import sys
 import numpy as np
 import torch
 
-from rgcnformer_backend.services.rna_structure import run_linearfold, build_edge_index_from_structure
-from rgcnformer_backend.core.paths import LINEARFOLD_PATH
+from mrmodn_backend.services.rna_structure import run_linearfold, build_edge_index_from_structure
+from mrmodn_backend.core.paths import LINEARFOLD_PATH
 
 def print_section(title):
     """打印分隔线"""

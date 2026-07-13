@@ -2,15 +2,15 @@
 Backward-compatible shim for common.
 
 All code has been moved to:
-- rgcnformer_backend.core.constants   (MOD_NAMES, GROUP_TO_CLASS_INDICES, etc.)
-- rgcnformer_backend.core.config      (Config, get_logger)
-- rgcnformer_backend.training.sampling (MultilabelBalancedBatchSampler, DynamicBalancedBatchSampler)
-- rgcnformer_backend.training.engine   (train_epoch, test_epoch, compute_attention_supervision_loss)
-- rgcnformer_backend.training.metrics  (calculate_topk_recall, print_topk_table, etc.)
+- mrmodn_backend.core.constants   (MOD_NAMES, GROUP_TO_CLASS_INDICES, etc.)
+- mrmodn_backend.core.config      (Config, get_logger)
+- mrmodn_backend.training.sampling (MultilabelBalancedBatchSampler, DynamicBalancedBatchSampler)
+- mrmodn_backend.training.engine   (train_epoch, test_epoch, compute_attention_supervision_loss)
+- mrmodn_backend.training.metrics  (calculate_topk_recall, print_topk_table, etc.)
 
 This file re-exports the public API for backward compatibility.
 """
-from rgcnformer_backend.core.constants import (
+from mrmodn_backend.core.constants import (
     MOD_NAMES,
     NUCLEOTIDE_GROUP_NAMES,
     INDEX_TO_NUCLEOTIDE,
@@ -22,16 +22,16 @@ from rgcnformer_backend.core.constants import (
     PLANT_VALID_CLASS_INDICES,
     LABEL_MAPPING,
 )
-from rgcnformer_backend.training.sampling import (
+from mrmodn_backend.training.sampling import (
     MultilabelBalancedBatchSampler,
     DynamicBalancedBatchSampler,
 )
-from rgcnformer_backend.training.engine import (
+from mrmodn_backend.training.engine import (
     train_epoch,
     test_epoch,
     compute_attention_supervision_loss,
 )
-from rgcnformer_backend.training.metrics import (
+from mrmodn_backend.training.metrics import (
     calculate_topk_recall,
     print_topk_table,
     calculate_comprehensive_localization_metrics,

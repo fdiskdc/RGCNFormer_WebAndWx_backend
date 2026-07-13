@@ -1,15 +1,15 @@
-# RGCNFormer_WebAndWx_backend
+# mRModN_WebAndWx_backend
 
 [中文](#中文) | [English](#english)
 
 ---
 
 <a name="中文"></a>
-# RGCNFormer RNA 分类后端服务
+# mRModN RNA 分类后端服务
 
 ## 项目简介
 
-RGCNFormer_WebAndWx_backend 是一个基于深度学习的 RNA 序列分类后端服务，使用图卷积网络（GCN）和类查询注意力机制实现 RNA 序列的 12 类多标签分类。支持 Web 应用和微信小程序两种前端接入方式，并提供丰富的模型可解释性功能。
+mRModN_WebAndWx_backend 是一个基于深度学习的 RNA 序列分类后端服务，使用图卷积网络（GCN）和类查询注意力机制实现 RNA 序列的 12 类多标签分类。支持 Web 应用和微信小程序两种前端接入方式，并提供丰富的模型可解释性功能。
 
 ## 主要特性
 
@@ -24,8 +24,8 @@ RGCNFormer_WebAndWx_backend 是一个基于深度学习的 RNA 序列分类后�
 ## 项目结构
 
 ```
-RGCNFormer_WebAndWx_backend/
-├── rgcnformer_backend/             # 主应用包 / Main application package
+mRModN_WebAndWx_backend/
+├── mrmodn_backend/             # 主应用包 / Main application package
 │   ├── __init__.py                # 包初始化 / Package init
 │   ├── app.py                     # Flask 应用工厂 / Flask app factory
 │   ├── core/                      # 核心配置模块 / Core configuration
@@ -33,7 +33,7 @@ RGCNFormer_WebAndWx_backend/
 │   │   ├── constants.py           # RNA 分类常量 / RNA classification constants
 │   │   └── paths.py               # 资源路径解析 / Resource path resolution
 │   ├── models/                    # 模型定义 / Model definitions
-│   │   ├── rgcnformer.py          # 主模型 (RNA_ClassQuery_Model) / Main model
+│   │   ├── mrmodn.py          # 主模型 (RNA_ClassQuery_Model) / Main model
 │   │   ├── onnx_compatible.py     # ONNX 导出版本 / ONNX export version
 │   │   └── runtime.py             # 模型加载工具 / Model loading utilities
 │   ├── services/                  # 业务逻辑层 / Business logic
@@ -69,9 +69,9 @@ RGCNFormer_WebAndWx_backend/
 
 ## LinearFold 保护声明
 
-> **`LinearFold/` 目录为外部 C++ 依赖，属于第三方工具。请勿修改该目录下的任何文件。** 所有项目自有代码位于 `rgcnformer_backend/` 包内。
+> **`LinearFold/` 目录为外部 C++ 依赖，属于第三方工具。请勿修改该目录下的任何文件。** 所有项目自有代码位于 `mrmodn_backend/` 包内。
 >
-> **The `LinearFold/` directory is an external C++ dependency (third-party tool). Do NOT modify any files in this directory.** All project-owned code resides in the `rgcnformer_backend/` package.
+> **The `LinearFold/` directory is an external C++ dependency (third-party tool). Do NOT modify any files in this directory.** All project-owned code resides in the `mrmodn_backend/` package.
 
 ## 快速开始
 
@@ -85,8 +85,8 @@ RGCNFormer_WebAndWx_backend/
 ### 方法 1：使用 Docker（推荐）
 
 ```bash
-git clone https://github.com/fdiskdc/RGCNFormer_WebAndWx_backend.git
-cd RGCNFormer_WebAndWx_backend
+git clone https://github.com/fdiskdc/mRModN_WebAndWx_backend.git
+cd mRModN_WebAndWx_backend
 
 # 复制并编辑环境变量 / Copy and edit environment variables
 cp .env.example .env
@@ -107,7 +107,7 @@ uv sync --locked
 cd LinearFold && make && cd ..
 
 # 启动 Celery Worker / Start Celery Worker
-uv run celery -A rgcnformer_backend.workers.tasks.celery_app worker --loglevel=info
+uv run celery -A mrmodn_backend.workers.mrmodn_backend.workers.tasks.celery_app worker --loglevel=info
 
 # 启动 Flask 开发服务器 / Start Flask dev server
 uv run python main.py
@@ -119,7 +119,7 @@ uv run python main.py
 uv sync --locked
 
 # 启动 Celery Worker / Start Celery Worker
-uv run celery -A rgcnformer_backend.workers.tasks.celery_app worker --concurrency=1 --loglevel=info
+uv run celery -A mrmodn_backend.workers.mrmodn_backend.workers.tasks.celery_app worker --concurrency=1 --loglevel=info
 
 # 使用 Gunicorn 启动 / Start with Gunicorn
 uv run gunicorn -w 1 -b 0.0.0.0:8000 --timeout 120 wsgi:app
@@ -131,26 +131,26 @@ uv run gunicorn -w 1 -b 0.0.0.0:8000 --timeout 120 wsgi:app
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
-| GET | `/api/health` | 健康检查 / Health check |
-| POST | `/api/v1/submit-task` | 提交预测任务 / Submit prediction task |
-| GET | `/api/v1/results/<job_id>` | 获取预测结果 / Get prediction result |
+| GET | `/mrmodn/api/health` | 健康检查 / Health check |
+| POST | `/mrmodn/api/v1/submit-task` | 提交预测任务 / Submit prediction task |
+| GET | `/mrmodn/api/v1/results/<job_id>` | 获取预测结果 / Get prediction result |
 
 ### 微信小程序接口 / WeChat Endpoints
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
-| POST | `/api/v1/wx/login` | 微信登录 / WeChat login |
-| POST | `/api/v1/wx-submit-task` | 批量提交（最多5条）/ Batch submit (up to 5) |
-| GET | `/api/v1/wx-task-progress/<job_id>` | 查询批量进度 / Query batch progress |
+| POST | `/mrmodn/api/v1/wx/login` | 微信登录 / WeChat login |
+| POST | `/mrmodn/api/v1/wx-submit-task` | 批量提交（最多5条）/ Batch submit (up to 5) |
+| GET | `/mrmodn/api/v1/wx-task-progress/<job_id>` | 查询批量进度 / Query batch progress |
 
 ### 模型可解释性接口 / Explainability Endpoints
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
-| GET | `/api/v1/model-architecture` | 获取模型架构 / Get model architecture |
-| GET | `/api/v1/model-graph` | 获取计算图 / Get computation graph |
-| POST | `/api/v1/integrated-gradients` | IG 归因分析 / Integrated Gradients |
-| POST | `/api/v1/visualize-gcn-aggregation` | GCN 聚合可视化 / GCN aggregation viz |
+| GET | `/mrmodn/api/v1/model-architecture` | 获取模型架构 / Get model architecture |
+| GET | `/mrmodn/api/v1/model-graph` | 获取计算图 / Get computation graph |
+| POST | `/mrmodn/api/v1/integrated-gradients` | IG 归因分析 / Integrated Gradients |
+| POST | `/mrmodn/api/v1/visualize-gcn-aggregation` | GCN 聚合可视化 / GCN aggregation viz |
 
 ## 测试
 
@@ -160,7 +160,7 @@ uv run pytest tests/
 
 # 检查类型标注 / Check type annotations
 # （如使用 mypy）/ (if using mypy)
-uv run mypy rgcnformer_backend/
+uv run mypy mrmodn_backend/
 ```
 
 ## 许可证
@@ -170,17 +170,17 @@ uv run mypy rgcnformer_backend/
 ---
 
 <a name="english"></a>
-# RGCNFormer RNA Classification Backend Service
+# mRModN RNA Classification Backend Service
 
 ## Project Overview
 
-RGCNFormer_WebAndWx_backend is a deep learning-based RNA sequence classification backend service that implements 12-class multi-label classification using Graph Convolutional Networks (GCN) and Class-Query attention mechanisms. It supports both Web application and WeChat Mini Program frontends with rich model interpretability features.
+mRModN_WebAndWx_backend is a deep learning-based RNA sequence classification backend service that implements 12-class multi-label classification using Graph Convolutional Networks (GCN) and Class-Query attention mechanisms. It supports both Web application and WeChat Mini Program frontends with rich model interpretability features.
 
 ## Project Structure
 
 ```
-RGCNFormer_WebAndWx_backend/
-├── rgcnformer_backend/             # Main application package
+mRModN_WebAndWx_backend/
+├── mrmodn_backend/             # Main application package
 │   ├── __init__.py                # Package init
 │   ├── app.py                     # Flask app factory
 │   ├── core/                      # Core configuration
@@ -188,7 +188,7 @@ RGCNFormer_WebAndWx_backend/
 │   │   ├── constants.py           # RNA classification constants
 │   │   └── paths.py               # Resource path resolution
 │   ├── models/                    # Model definitions
-│   │   ├── rgcnformer.py          # Main model (RNA_ClassQuery_Model)
+│   │   ├── mrmodn.py          # Main model (RNA_ClassQuery_Model)
 │   │   ├── onnx_compatible.py     # ONNX export version
 │   │   └── runtime.py             # Model loading utilities
 │   ├── services/                  # Business logic
@@ -222,7 +222,7 @@ RGCNFormer_WebAndWx_backend/
 
 ## LinearFold Protection Notice
 
-> **The `LinearFold/` directory is an external C++ dependency (third-party tool). Do NOT modify any files in this directory.** All project-owned code resides in the `rgcnformer_backend/` package.
+> **The `LinearFold/` directory is an external C++ dependency (third-party tool). Do NOT modify any files in this directory.** All project-owned code resides in the `mrmodn_backend/` package.
 
 ## Quick Start
 
@@ -236,8 +236,8 @@ RGCNFormer_WebAndWx_backend/
 ### Method 1: Using Docker (Recommended)
 
 ```bash
-git clone https://github.com/fdiskdc/RGCNFormer_WebAndWx_backend.git
-cd RGCNFormer_WebAndWx_backend
+git clone https://github.com/fdiskdc/mRModN_WebAndWx_backend.git
+cd mRModN_WebAndWx_backend
 cp .env.example .env
 docker-compose up -d
 docker-compose logs -f
@@ -248,7 +248,7 @@ docker-compose logs -f
 ```bash
 uv sync --locked
 cd LinearFold && make && cd ..
-uv run celery -A rgcnformer_backend.workers.tasks.celery_app worker --loglevel=info
+uv run celery -A mrmodn_backend.workers.mrmodn_backend.workers.tasks.celery_app worker --loglevel=info
 uv run python main.py
 ```
 
@@ -256,7 +256,7 @@ uv run python main.py
 
 ```bash
 uv sync --locked
-uv run celery -A rgcnformer_backend.workers.tasks.celery_app worker --concurrency=1 --loglevel=info
+uv run celery -A mrmodn_backend.workers.mrmodn_backend.workers.tasks.celery_app worker --concurrency=1 --loglevel=info
 uv run gunicorn -w 1 -b 0.0.0.0:8000 --timeout 120 wsgi:app
 ```
 

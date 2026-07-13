@@ -30,7 +30,7 @@ def test_caching():
     print("\n--- First Request (should be cache MISS) ---")
     start_time = time.time()
     response1 = requests.post(
-        f"{BASE_URL}/api/v1/submit-task",
+        f"{BASE_URL}/mrmodn/api/v1/submit-task",
         json={
             "rnaSequence": TEST_SEQUENCE,
             "userId": "test_user"
@@ -61,7 +61,7 @@ def test_caching():
     print("\n--- Second Request (should be cache HIT) ---")
     start_time = time.time()
     response2 = requests.post(
-        f"{BASE_URL}/api/v1/submit-task",
+        f"{BASE_URL}/mrmodn/api/v1/submit-task",
         json={
             "rnaSequence": TEST_SEQUENCE,
             "userId": "test_user"
@@ -109,7 +109,7 @@ def test_caching():
     
     start_time = time.time()
     response3 = requests.post(
-        f"{BASE_URL}/api/v1/submit-task",
+        f"{BASE_URL}/mrmodn/api/v1/submit-task",
         json={
             "rnaSequence": different_sequence,
             "userId": "test_user"

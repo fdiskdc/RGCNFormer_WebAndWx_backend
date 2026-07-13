@@ -2,14 +2,14 @@
 Backward-compatible shim for human.
 
 All code has been moved to:
-- rgcnformer_backend.services.rna_structure  (run_linearfold, build_edge_index_from_structure, build_sequential_edge_index)
-- rgcnformer_backend.data.human              (Mer100Dataset, helpers, constants)
-- rgcnformer_backend.core.constants          (LABEL_MAPPING, INDEX_TO_NUCLEOTIDE, etc.)
+- mrmodn_backend.services.rna_structure  (run_linearfold, build_edge_index_from_structure, build_sequential_edge_index)
+- mrmodn_backend.data.human              (Mer100Dataset, helpers, constants)
+- mrmodn_backend.core.constants          (LABEL_MAPPING, INDEX_TO_NUCLEOTIDE, etc.)
 
 This file re-exports the public API for backward compatibility.
 """
-from rgcnformer_backend.core.constants import LABEL_MAPPING, INDEX_TO_NUCLEOTIDE, NUCLEOTIDE_GROUPS, MOD_NAMES
-from rgcnformer_backend.data.human import (
+from mrmodn_backend.core.constants import LABEL_MAPPING, INDEX_TO_NUCLEOTIDE, NUCLEOTIDE_GROUPS, MOD_NAMES
+from mrmodn_backend.data.human import (
     ONE_HOT_MAPPING,
     DEFAULT_ONE_HOT,
     TARGET_LENGTH,
@@ -19,7 +19,7 @@ from rgcnformer_backend.data.human import (
     one_hot_to_sequence,
     Mer100Dataset,
 )
-from rgcnformer_backend.services.rna_structure import (
+from mrmodn_backend.services.rna_structure import (
     run_linearfold,
     build_edge_index_from_structure,
     build_sequential_edge_index,

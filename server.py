@@ -3,8 +3,8 @@ Flask development server entry point.
 
 For production, use wsgi.py with Gunicorn instead.
 """
-from rgcnformer_backend.app import create_app
-from rgcnformer_backend.core.config import config, get_logger
+from mrmodn_backend.app import create_app
+from mrmodn_backend.core.config import config, get_logger
 
 logger = get_logger('server')
 app = create_app()

@@ -1,4 +1,4 @@
-# Tests for RGCNFormer_WebAndWx_backend
+# Tests for mRModN_WebAndWx_backend
 
 ## Structure
 

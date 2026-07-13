@@ -8,10 +8,10 @@
 import time
 import numpy as np
 import torch
-from rgcnformer_backend.services.rna_structure import run_linearfold, build_edge_index_from_structure
-from rgcnformer_backend.models.rgcnformer import RNA_ClassQuery_Model
+from mrmodn_backend.services.rna_structure import run_linearfold, build_edge_index_from_structure
+from mrmodn_backend.models.mrmodn import RNA_ClassQuery_Model
 import json
-from rgcnformer_backend.core.config import config
+from mrmodn_backend.core.config import config
 import argparse
 
 # 全局变量

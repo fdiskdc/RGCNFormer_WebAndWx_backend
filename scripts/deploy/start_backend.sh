@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ============================================================================
-# RGCNFormer Backend Startup Script
+# mRModN Backend Startup Script
 # ============================================================================
 # This script starts both Gunicorn (Flask) and Celery worker services
 # using uv for Python environment management.
@@ -37,7 +37,7 @@ CELERY_CONCURRENCY=1
 cd "$(dirname "$0")/../.."
 
 echo "=========================================="
-echo "  RGCNFormer Backend Startup"
+echo "  mRModN Backend Startup"
 echo "=========================================="
 echo "Working Directory:  $(pwd)"
 echo "Gunicorn Workers:   $GUNICORN_WORKERS"

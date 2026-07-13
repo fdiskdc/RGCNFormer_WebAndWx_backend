@@ -1,5 +1,5 @@
 """
-Shared pytest fixtures for RGCNFormer_WebAndWx_backend tests.
+Shared pytest fixtures for mRModN_WebAndWx_backend tests.
 
 Provides project root path and common test configuration.
 """
@@ -22,5 +22,5 @@ def project_root():
 @pytest.fixture
 def config():
     """Return the global Config instance for testing."""
-    from rgcnformer_backend.core.config import config
+    from mrmodn_backend.core.config import config
     return config

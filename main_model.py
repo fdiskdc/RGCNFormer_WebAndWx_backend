@@ -1,10 +1,10 @@
 """
 Backward-compatible shim for main_model.
 
-All code has been moved to rgcnformer_backend.models.rgcnformer.
+All code has been moved to mrmodn_backend.models.mrmodn.
 This file re-exports the public API for backward compatibility.
 """
-from rgcnformer_backend.models.rgcnformer import (
+from mrmodn_backend.models.mrmodn import (
     ParallelCNNBlock,
     GCNBlock,
     ClassQueryHead,

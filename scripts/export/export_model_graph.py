@@ -3,8 +3,8 @@ import json
 import os
 import onnx as onnx
 
-from rgcnformer_backend.models.rgcnformer import RNA_ClassQuery_Model
-from rgcnformer_backend.core.config import config, get_logger
+from mrmodn_backend.models.mrmodn import RNA_ClassQuery_Model
+from mrmodn_backend.core.config import config, get_logger
 
 logger = get_logger('graph_exporter')
 

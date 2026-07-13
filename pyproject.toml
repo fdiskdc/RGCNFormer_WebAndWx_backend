@@ -1,7 +1,7 @@
 [project]
-name = "rgcnformer-backend"
+name = "mrmodn-backend"
 version = "1.0.0"
-description = "RGCNFormer RNA Classification Backend Service"
+description = "mRModN RNA Classification Backend Service"
 requires-python = ">=3.11,<3.12"
 dependencies = [
     "flask>=2.0.0",
@@ -14,6 +14,7 @@ dependencies = [
     "gunicorn>=20.1.0",
     "torch>=2.0.1",
     "torch-geometric>=2.4.0",
+    "openpyxl>=3.1.0",
 ]
 
 [dependency-groups]

@@ -4,7 +4,7 @@
  # @Date: 2026-01-22 21:21:08
  # @LastEditors: Chao Deng && chaodeng987@outlook.com
  # @LastEditTime: 2026-01-22 21:21:15
- # @FilePath: /rgcnformer_mobile_web/backend/stop_backend.sh
+ # @FilePath: /mrmodn_mobile_web/backend/stop_backend.sh
  # @Description: 
  # 那只是一场游戏一场梦
  #  
@@ -15,7 +15,7 @@
 ### 
 
 # ============================================================================
-# RGCNFormer Backend Stop Script
+# mRModN Backend Stop Script
 # ============================================================================
 # This script stops both Gunicorn and Celery worker services.
 # ============================================================================
@@ -24,7 +24,7 @@
 cd "$(dirname "$0")/../.."
 
 echo "=========================================="
-echo "  Stopping RGCNFormer Backend"
+echo "  Stopping mRModN Backend"
 echo "=========================================="
 
 # ============================================================================

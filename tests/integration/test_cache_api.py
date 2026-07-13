@@ -24,7 +24,7 @@ class TestCacheApi:
         expected_job_id = generate_sha256_hash(TEST_SEQUENCE)
 
         response = requests.post(
-            f"{BASE_URL}/api/v1/submit-task",
+            f"{BASE_URL}/mrmodn/api/v1/submit-task",
             json={"rnaSequence": TEST_SEQUENCE, "userId": "test_user"},
         )
 
@@ -38,13 +38,13 @@ class TestCacheApi:
 
         # First request (warm the cache)
         requests.post(
-            f"{BASE_URL}/api/v1/submit-task",
+            f"{BASE_URL}/mrmodn/api/v1/submit-task",
             json={"rnaSequence": TEST_SEQUENCE, "userId": "test_user"},
         )
 
         # Second request (should hit cache)
         response = requests.post(
-            f"{BASE_URL}/api/v1/submit-task",
+            f"{BASE_URL}/mrmodn/api/v1/submit-task",
             json={"rnaSequence": TEST_SEQUENCE, "userId": "test_user"},
         )
 
@@ -58,7 +58,7 @@ class TestCacheApi:
         expected_job_id = generate_sha256_hash(different_sequence)
 
         response = requests.post(
-            f"{BASE_URL}/api/v1/submit-task",
+            f"{BASE_URL}/mrmodn/api/v1/submit-task",
             json={"rnaSequence": different_sequence, "userId": "test_user"},
         )
 
@@ -71,6 +71,6 @@ class TestCacheApi:
     def _require_server(self):
         """Skip tests if the backend server is not reachable."""
         try:
-            requests.get(f"{BASE_URL}/api/v1/health", timeout=2)
+            requests.get(f"{BASE_URL}/mrmodn/api/health", timeout=2)
         except requests.exceptions.ConnectionError:
             pytest.skip("Backend server not running on {BASE_URL}")

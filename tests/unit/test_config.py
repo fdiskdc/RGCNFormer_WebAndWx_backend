@@ -8,7 +8,7 @@ import os
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from rgcnformer_backend.core.config import config as _config_instance
+from mrmodn_backend.core.config import config as _config_instance
 
 # Get the Config class for attribute testing
 Config = type(_config_instance)
@@ -27,10 +27,10 @@ class TestConfigDefaults:
         assert config.REDIS_DB == 0
 
     def test_model_checkpoint_path_default(self, config):
-        assert config.MODEL_CHECKPOINT_PATH == 'epoch_040.pt'
+        assert config.MODEL_CHECKPOINT_PATH.endswith('epoch_040.pt')
 
     def test_model_config_path_default(self, config):
-        assert config.MODEL_CONFIG_PATH == 'json/human.json'
+        assert config.MODEL_CONFIG_PATH.endswith(os.path.join('json', 'human.json'))
 
     def test_model_device_default(self, config):
         assert config.MODEL_DEVICE == 'cpu'

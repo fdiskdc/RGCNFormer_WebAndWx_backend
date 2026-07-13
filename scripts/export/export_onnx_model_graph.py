@@ -2,9 +2,9 @@ import torch
 import json
 import os
 
-from rgcnformer_backend.models.rgcnformer import RNA_ClassQuery_Model as OriginalModel
-from rgcnformer_backend.models.onnx_compatible import RNA_ClassQuery_Model as OnnxModel
-from rgcnformer_backend.core.config import config, get_logger
+from mrmodn_backend.models.mrmodn import RNA_ClassQuery_Model as OriginalModel
+from mrmodn_backend.models.onnx_compatible import RNA_ClassQuery_Model as OnnxModel
+from mrmodn_backend.core.config import config, get_logger
 
 logger = get_logger('graph_exporter')
 

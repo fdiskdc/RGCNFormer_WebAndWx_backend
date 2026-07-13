@@ -1,8 +1,8 @@
 # DEPRECATED: This file is no longer used.
-# Configuration is now handled by rgcnformer_backend/core/config.py
+# Configuration is now handled by mrmodn_backend/core/config.py
 # which reads REDIS_HOST from environment variables.
 """
-Configuration management for RGCNFormer backend.
+Configuration management for mRModN backend.
 
 Loads settings from environment variables with sensible defaults.
 """

@@ -5,6 +5,7 @@ Verifies that all constant definitions are correct and consistent.
 """
 import sys
 import os
+import importlib
 from unittest.mock import MagicMock
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -12,7 +13,9 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspa
 # Mock torch and torch_geometric if not installed (constants don't need them)
 for mod_name in ['torch', 'torch.nn', 'torch.utils', 'torch.utils.data',
                  'torch_geometric', 'torch_geometric.data', 'torch_geometric.loader']:
-    if mod_name not in sys.modules:
+    try:
+        importlib.import_module(mod_name)
+    except ImportError:
         sys.modules[mod_name] = MagicMock()
 
 from common import (
